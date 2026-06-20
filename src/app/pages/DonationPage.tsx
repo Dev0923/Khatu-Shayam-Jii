@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { jsPDF } from "jspdf";
 import { useNavigate } from "react-router";
 import { Footer } from "../components/Footer";
 import { useForm } from "react-hook-form";
@@ -93,6 +94,7 @@ export function DonationPage() {
     setSubmitLoading(true);
     setSubmitError("");
     try {
+      const vals = getValues();
       const token = localStorage.getItem("token");
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -119,13 +121,62 @@ export function DonationPage() {
         throw new Error(data.detail || "Failed to register donation");
       }
 
-      setTxnId(data.donation_id);
+      const returnedTxnId = data.donation_id;
+      setTxnId(returnedTxnId);
+      generatePDF(returnedTxnId);
       setStep("success");
     } catch (err: any) {
       setSubmitError(err.message || "Something went wrong. Please try again.");
     } finally {
       setSubmitLoading(false);
     }
+  }
+
+  function generatePDF(id: string) {
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const vals = getValues();
+    
+    // Header
+    doc.setFillColor(31, 47, 140);
+    doc.rect(0, 0, 210, 38, "F");
+    
+    doc.setFontSize(20);
+    doc.setTextColor(255, 255, 255);
+    doc.text("Khatu Shyam Ji Temple", 105, 16, { align: "center" });
+    
+    doc.setFontSize(11);
+    doc.setTextColor(247, 148, 29);
+    doc.text("Official Donation Receipt", 105, 26, { align: "center" });
+    
+    // Body
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Receipt No: ${id}`, 15, 48);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 15, 55);
+    
+    doc.setFontSize(12);
+    doc.setTextColor(31, 47, 140);
+    doc.text("Donor Details", 15, 70);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(51, 51, 51);
+    
+    let y = 80;
+    doc.text(`Name: ${vals.fullName}`, 15, y); y += 7;
+    doc.text(`Mobile: ${vals.mobile}`, 15, y); y += 7;
+    doc.text(`Purpose: ${vals.purpose}`, 15, y); y += 7;
+    doc.text(`Amount: INR ${Number(vals.amount).toLocaleString("en-IN")}`, 15, y); y += 7;
+    
+    if (vals.want80G) {
+      doc.text(`PAN: ${vals.panCard}`, 15, y); y += 7;
+      doc.text(`80G Certificate requested: Yes`, 15, y); y += 7;
+    }
+    
+    doc.setFontSize(11);
+    doc.setTextColor(31, 47, 140);
+    doc.text("Thank you for your generous contribution.", 105, y + 15, { align: "center" });
+    
+    doc.save(`Donation_Receipt_${id}.pdf`);
   }
 
   function handleCopyUPI() {
@@ -426,16 +477,13 @@ export function DonationPage() {
                         required: "Amount is required",
                         min: { value: 1, message: "Minimum ₹1" },
                         pattern: { value: /^\d+$/, message: "Numbers only" },
+                        onChange: (e) => setSelectedQuick(null)
                       })}
                       placeholder="Enter amount"
                       className="w-full text-sm bg-transparent outline-none pb-2 pl-5 placeholder-gray-300"
                       style={{
                         borderBottom: `1.5px solid ${errors.amount ? C.error : C.border}`,
                         color: C.darkText,
-                      }}
-                      onChange={(e) => {
-                        setValue("amount", e.target.value, { shouldValidate: true });
-                        setSelectedQuick(null);
                       }}
                     />
                   </div>
@@ -475,7 +523,7 @@ export function DonationPage() {
                     {...register("panCard", {
                       required: want80G ? "PAN Card is required for 80G certificate" : false,
                       pattern: {
-                        value: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
+                        value: want80G ? /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/ : /.*/,
                         message: "Enter valid PAN (e.g. ABCDE1234F)",
                       },
                     })}

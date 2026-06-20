@@ -13,7 +13,7 @@ import {
   HandCoins, UtensilsCrossed,
   Building2, ScrollText,
   ChevronRight, Info as InfoIcon, CalendarDays, Star as StarIcon, Newspaper,
-  BookOpen, MapPinned, Images, Video, Rotate3d, Network,
+  BookOpen, MapPinned, Images, Video, Rotate3d, Network, ShieldAlert,
 } from "lucide-react";
 import templeImg from "../../imports/khatu-shyam-ji.jpg";
 import logoImg from "../../imports/image-21.png";
@@ -48,6 +48,7 @@ export function HomePage() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeNav, setActiveNav]           = useState("home");
+  const [isSOSOpen, setIsSOSOpen]           = useState(false);
   const [permOpen, setPermOpen]             = useState(false);
   const [mobilePermOpen, setMobilePermOpen] = useState(false);
   const [donationOpen, setDonationOpen]     = useState(false);
@@ -243,7 +244,7 @@ export function HomePage() {
 
           {/* CTA Buttons */}
           <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
-            <button className="px-4 py-1.5 rounded-md text-xs font-bold text-white transition-all hover:opacity-90"
+            <button onClick={() => setIsSOSOpen(true)} className="px-4 py-1.5 rounded-md text-xs font-bold text-white transition-all hover:opacity-90"
               style={{ backgroundColor: C.pink }}>
               {t('header.sos')}
             </button>
@@ -341,9 +342,9 @@ export function HomePage() {
               </button>
             ))}
             <div className="flex gap-2 pt-2">
-              <button className="flex-1 py-2 rounded-md text-xs font-bold text-white" style={{ backgroundColor: C.pink }}>{t('header.sos')}</button>
+              <button onClick={() => { setIsSOSOpen(true); setMobileMenuOpen(false); }} className="flex-1 py-2 rounded-md text-xs font-bold text-white" style={{ backgroundColor: C.pink }}>{t('header.sos')}</button>
               {!isLoggedIn ? (
-                <button onClick={() => navigate("/login")} className="flex-1 py-2 rounded-md text-xs font-bold text-white" style={{ backgroundColor: C.green }}>{t('header.login')}</button>
+                <button onClick={() => { navigate("/login"); setMobileMenuOpen(false); }} className="flex-1 py-2 rounded-md text-xs font-bold text-white" style={{ backgroundColor: C.green }}>{t('header.login')}</button>
               ) : (
                 <button onClick={() => { localStorage.clear(); window.location.reload(); }} className="flex-1 py-2 rounded-md text-xs font-bold text-white" style={{ backgroundColor: C.muted }}>Logout</button>
               )}
@@ -649,7 +650,7 @@ export function HomePage() {
                 </div>
                 <div className="px-4 pb-4">
                   <button
-                    onClick={() => navigate(s.slug === "darshan-pass" ? "/darshan-booking" : `/services/${s.slug}`)}
+                    onClick={() => navigate(s.slug === "darshan-pass" ? "/darshan-booking" : s.slug === "officer-login" ? "/login" : `/services/${s.slug}`)}
                     className="w-full py-2.5 rounded-md text-sm font-bold text-white transition-all hover:opacity-95"
                     style={{
                       background: `linear-gradient(90deg, #F7941D 0%, #F26A21 100%)`,
@@ -668,24 +669,26 @@ export function HomePage() {
       </section>
 
       {/* ── CTA Banner ──────────────────────────────────── */}
-      <section className="py-12 px-6 text-center relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${C.darkBlue} 0%, #2a3fa8 100%)` }}>
-        <div className="absolute inset-0 opacity-5" style={{
-          backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
-          backgroundSize: "20px 20px",
-        }} />
-        <div className="relative">
-          <p className="text-xs uppercase tracking-widest mb-2 font-semibold" style={{ color: C.orange }}>{t('cta.subtitle')}</p>
-          <h2 className="text-2xl font-bold text-white mb-2">{t('cta.title')}</h2>
-          <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: "rgba(255,255,255,0.75)" }}>
-            {t('cta.desc')}
-          </p>
-          <button onClick={() => navigate("/login")}
-            className="px-8 py-3 rounded-full text-sm font-bold transition-all hover:opacity-90"
-            style={{ backgroundColor: C.orange, color: C.white, boxShadow: `0 4px 18px rgba(247,148,29,0.45)` }}>
-            {t('cta.btn')}
-          </button>
-        </div>
-      </section>
+      {!isLoggedIn && (
+        <section className="py-12 px-6 text-center relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${C.darkBlue} 0%, #2a3fa8 100%)` }}>
+          <div className="absolute inset-0 opacity-5" style={{
+            backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+          }} />
+          <div className="relative">
+            <p className="text-xs uppercase tracking-widest mb-2 font-semibold" style={{ color: C.orange }}>{t('cta.subtitle')}</p>
+            <h2 className="text-2xl font-bold text-white mb-2">{t('cta.title')}</h2>
+            <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: "rgba(255,255,255,0.75)" }}>
+              {t('cta.desc')}
+            </p>
+            <button onClick={() => navigate("/login")}
+              className="px-8 py-3 rounded-full text-sm font-bold transition-all hover:opacity-90"
+              style={{ backgroundColor: C.orange, color: C.white, boxShadow: `0 4px 18px rgba(247,148,29,0.45)` }}>
+              {t('cta.btn')}
+            </button>
+          </div>
+        </section>
+      )}
 
       <Footer />
 
@@ -719,6 +722,59 @@ export function HomePage() {
         .slick-slide > div { height: 100%; display: flex; }
         .slick-slide > div > div { width: 100%; display: flex; }
       `}</style>
+
+      {/* ── SOS Modal ────────────────────────────────────── */}
+      {isSOSOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
+          <div className="w-full max-w-sm rounded-2xl p-6 relative" style={{ backgroundColor: C.white, border: `2px solid ${C.pink}` }}>
+            <button onClick={() => setIsSOSOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800 transition-colors">
+              <X size={20} />
+            </button>
+            
+            <div className="flex flex-col items-center text-center gap-2 mb-6 mt-2">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center animate-pulse" style={{ backgroundColor: `${C.pink}20`, color: C.pink }}>
+                <ShieldAlert size={32} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold tracking-wide" style={{ color: C.pink }}>EMERGENCY SOS</h2>
+                <p className="text-sm" style={{ color: C.muted }}>Immediate assistance for devotees</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 mb-6">
+              <a href="tel:112" className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-gray-50" style={{ border: `1px solid ${C.border}` }}>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: `${C.pink}15`, color: C.pink }}><Phone size={18}/></div>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-bold" style={{ color: C.darkText }}>Police & General SOS</p>
+                  <p className="text-xs" style={{ color: C.muted }}>Dial 112 or 100</p>
+                </div>
+              </a>
+              <a href="tel:108" className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-gray-50" style={{ border: `1px solid ${C.border}` }}>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: `${C.orange}15`, color: C.orange }}><Heart size={18}/></div>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-bold" style={{ color: C.darkText }}>Medical Emergency</p>
+                  <p className="text-xs" style={{ color: C.muted }}>Dial 108</p>
+                </div>
+              </a>
+              <a href="tel:01576221000" className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-gray-50" style={{ border: `1px solid ${C.border}` }}>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: `${C.darkBlue}15`, color: C.darkBlue }}><Shield size={18}/></div>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-bold" style={{ color: C.darkText }}>Mela Control Room</p>
+                  <p className="text-xs" style={{ color: C.muted }}>Dial 01576-221000</p>
+                </div>
+              </a>
+            </div>
+
+            <button onClick={() => {
+              alert("Your GPS location and distress signal have been sent to the Temple Control Room. Help is on the way.");
+              setIsSOSOpen(false);
+            }} className="w-full py-3.5 rounded-xl text-white font-bold transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-2" style={{ backgroundColor: C.pink, boxShadow: `0 4px 12px ${C.pink}40` }}>
+              <MapPin size={18} />
+              SHARE MY LOCATION
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

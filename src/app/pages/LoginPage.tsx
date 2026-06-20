@@ -82,7 +82,7 @@ export function LoginPage() {
           {/* Form Card */}
           <div className="rounded-2xl px-5 py-4" style={{ backgroundColor: C.cardBg, border: `1px solid ${C.border}` }}>
             {portal === "admin"
-              ? <AdminForm method={adminMethod} setMethod={setAdminMethod} showPassword={showPassword} setShowPassword={setShowPassword} />
+              ? <AdminForm method={adminMethod} setMethod={setAdminMethod} showPassword={showPassword} setShowPassword={setShowPassword} onLogin={() => { sessionStorage.setItem("adminAuth", "true"); navigate("/admin"); }} />
               : <DevoteeOTPForm />
             }
           </div>
@@ -602,7 +602,17 @@ function DevoteeOTPForm() {
           {/* Password field (only for password method) */}
           {loginMethod === "password" && (
             <div>
-              <label className="block mb-0.5" style={{ color: C.textMuted, fontSize: "0.7rem", fontWeight: 500 }}>Password</label>
+              <div className="flex justify-between items-center mb-0.5">
+                <label className="block" style={{ color: C.textMuted, fontSize: "0.7rem", fontWeight: 500 }}>Password</label>
+                <button
+                  type="button"
+                  onClick={() => { setLoginMethod("otp"); setError(""); }}
+                  className="hover:underline text-[10px] font-semibold"
+                  style={{ color: C.orange, background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                >
+                  Forgot Password?
+                </button>
+              </div>
               <div className="flex items-center rounded-lg border px-2.5 py-1.5 gap-2" style={{ borderColor: C.border, backgroundColor: C.inputBg }}>
                 <Lock size={14} color={C.orange} />
                 <input
@@ -656,8 +666,8 @@ function DevoteeOTPForm() {
 
 /* ── Admin Form (unchanged) ────────────────────── */
 
-function AdminForm({ method, setMethod, showPassword, setShowPassword }: {
-  method: AdminMethod; setMethod: (m: AdminMethod) => void; showPassword: boolean; setShowPassword: (v: boolean) => void;
+function AdminForm({ method, setMethod, showPassword, setShowPassword, onLogin }: {
+  method: AdminMethod; setMethod: (m: AdminMethod) => void; showPassword: boolean; setShowPassword: (v: boolean) => void; onLogin: () => void;
 }) {
   return (
     <>
@@ -671,7 +681,7 @@ function AdminForm({ method, setMethod, showPassword, setShowPassword }: {
         <MethodTab active={method === "password"} onClick={() => setMethod("password")} icon={<KeyRound size={12} />} label="Password Login" />
         <MethodTab active={method === "otp"} onClick={() => setMethod("otp")} icon={<Smartphone size={12} />} label="OTP Login" />
       </div>
-      <form className="flex flex-col gap-2.5" onSubmit={e => e.preventDefault()}>
+      <form className="flex flex-col gap-2.5" onSubmit={e => { e.preventDefault(); onLogin(); }}>
         <DarkInput label="Admin Email" icon={<Mail size={15} color={C.orange} />} type="email" placeholder="admin@shyamsarathi.gov.in" />
         {method === "password" ? (
           <>
@@ -710,7 +720,6 @@ function MethodTab({ active, onClick, icon, label }: { active: boolean; onClick:
     </button>
   );
 }
-
 function DarkInput({ label, icon, type, placeholder }: { label: string; icon: React.ReactNode; type: string; placeholder: string }) {
   return (
     <div>
