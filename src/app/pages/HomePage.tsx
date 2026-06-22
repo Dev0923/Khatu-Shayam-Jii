@@ -46,16 +46,19 @@ export function HomePage() {
 
   // Live Weather Logic
   const [weatherTemp, setWeatherTemp] = useState<string>("24°C");
-  const [weatherCode, setWeatherCode] = useState<number>(0);
+  const [weatherCode, setWeatherCode] = useState<number>(800); // OpenWeather code for Clear Sky
 
   useEffect(() => {
     async function fetchWeather() {
       try {
-        const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=27.3667&longitude=75.4000&current=temperature_2m,weather_code");
+        const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY || "8d2de98e089f1c28e1a22fc19a24ef04";
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=27.3667&lon=75.4000&units=metric&appid=${apiKey}`);
         if (res.ok) {
           const data = await res.json();
-          setWeatherTemp(`${Math.round(data.current.temperature_2m)}°C`);
-          setWeatherCode(data.current.weather_code);
+          if (data && data.main && data.weather && data.weather[0]) {
+            setWeatherTemp(`${Math.round(data.main.temp)}°C`);
+            setWeatherCode(data.weather[0].id);
+          }
         }
       } catch (err) {
         console.error("Error fetching weather:", err);
@@ -70,30 +73,35 @@ export function HomePage() {
     let iconName = "sun";
 
     const code = weatherCode;
-    if (code === 0) {
+    // Map OpenWeather weather codes (see https://openweathermap.org/weather-conditions)
+    if (code === 800) {
       descEn = "Clear sky";
       descHi = "साफ आसमान";
       iconName = "sun";
-    } else if (code >= 1 && code <= 3) {
+    } else if (code === 801) {
       descEn = "Partly cloudy";
-      descHi = "आंशिक बादल";
+      descHi = "आंशिक रूप से बादल";
       iconName = "cloud-sun";
-    } else if (code === 45 || code === 48) {
-      descEn = "Foggy";
-      descHi = "कोहरा";
+    } else if (code >= 802 && code <= 804) {
+      descEn = "Cloudy";
+      descHi = "बादल";
       iconName = "cloud";
-    } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
+    } else if (code >= 700 && code < 800) {
+      descEn = "Foggy / Mist";
+      descHi = "कोहरा / धुंध";
+      iconName = "cloud";
+    } else if ((code >= 300 && code < 400) || (code >= 500 && code < 600)) {
       descEn = "Rainy";
       descHi = "बारिश";
       iconName = "cloud-rain";
-    } else if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) {
-      descEn = "Snowy";
-      descHi = "बर्फबारी";
-      iconName = "cloud";
-    } else if (code >= 95) {
+    } else if (code >= 200 && code < 300) {
       descEn = "Thunderstorm";
       descHi = "आंधी-तूफान";
       iconName = "cloud-lightning";
+    } else {
+      descEn = "Cloudy";
+      descHi = "बादल";
+      iconName = "cloud";
     }
 
     return {
