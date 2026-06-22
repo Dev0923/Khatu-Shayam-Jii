@@ -9,6 +9,8 @@
 - Framer Motion
 - Pannellum
 - FastAPI + Uvicorn
+- MongoDB database
+
 
 ## Running the code
 
