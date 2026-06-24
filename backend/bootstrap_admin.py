@@ -1,21 +1,20 @@
 import asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.future import select
+from sqlalchemy import select
+from datetime import datetime, timezone
 
-from app.core.config import settings
-from app.models.user import User, UserRole
-from app.core.security import get_password_hash
+from database import AsyncSessionLocal
+from models.sql_models import User
+from utils.password_handler import hash_password
 
 async def bootstrap():
     print("Connecting to database...")
-    engine = create_async_engine(settings.DATABASE_URL, connect_args=settings.DB_CONNECT_ARGS)
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    from database import init_db
+    await init_db()
     
-    email = "superadmin@ksj.com"
-    password = "SuperSecretPassword123!"
+    email = "admin@ksj.com"
+    password = "AdminPassword123!"
     
-    async with async_session() as session:
+    async with AsyncSessionLocal() as session:
         # Check if admin exists
         stmt = select(User).where(User.email == email)
         result = await session.execute(stmt)
@@ -23,14 +22,15 @@ async def bootstrap():
             print(f"Admin user {email} already exists.")
             return
 
-        print("Creating SUPER_ADMIN user...")
-        hashed_pw = get_password_hash(password)
+        print("Creating admin user...")
+        hashed_pw = hash_password(password)
         
         new_admin = User(
             email=email,
-            hashed_password=hashed_pw,
-            role=UserRole.SUPER_ADMIN,
-            is_active=True
+            password_hash=hashed_pw,
+            is_admin=True,
+            created_at=datetime.now(timezone.utc),
+            last_login=datetime.now(timezone.utc)
         )
         
         session.add(new_admin)
@@ -38,8 +38,6 @@ async def bootstrap():
         print(f"Successfully created SUPER_ADMIN:")
         print(f"Email: {email}")
         print(f"Password: {password}")
-        
-    await engine.dispose()
 
 if __name__ == "__main__":
     asyncio.run(bootstrap())

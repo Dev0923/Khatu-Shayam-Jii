@@ -42,6 +42,9 @@ export function Footer() {
   const [submitted, setSubmitted] = useState(false);
   const [text, setText]           = useState("");
   const [name, setName]           = useState("");
+  const [email, setEmail]         = useState("");
+  const [error, setError]         = useState("");
+  const [loading, setLoading]     = useState(false);
   const [showTop, setShowTop]     = useState(false);
 
   useEffect(() => {
@@ -50,16 +53,47 @@ export function Footer() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!text.trim()) return;
-    setSubmitted(true);
-    setTimeout(() => {
-      setOpen(false);
-      setSubmitted(false);
-      setText("");
-      setName("");
-    }, 2800);
+    if (text.trim().length < 10) {
+      setError("Suggestion must be at least 10 characters long.");
+      return;
+    }
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/support/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim() || "Anonymous Devotee",
+          email: email.trim() || "anonymous@devotee.com",
+          subject: "Portal Suggestion",
+          message: text.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        setSubmitted(true);
+        setTimeout(() => {
+          setOpen(false);
+          setSubmitted(false);
+          setText("");
+          setName("");
+          setEmail("");
+          setError("");
+        }, 2800);
+      } else {
+        const err = await response.json();
+        setError(err.detail?.[0]?.msg || err.detail || "Failed to submit. Please try again.");
+      }
+    } catch (err) {
+      setError("Network error. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -264,6 +298,19 @@ export function Footer() {
                   />
                 </div>
 
+                {/* Email */}
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: "#1F2F8C" }}>Email Address <span style={{ color: C.muted }}>(optional, for replies)</span></label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="devotee@example.com"
+                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
+                    style={{ backgroundColor: C.cream, border: `1.5px solid ${C.border}`, color: C.darkText }}
+                  />
+                </div>
+
                 {/* Suggestion */}
                 <div>
                   <label className="block text-xs font-semibold mb-1.5" style={{ color: "#1F2F8C" }}>
@@ -273,20 +320,25 @@ export function Footer() {
                     required
                     rows={4}
                     value={text}
-                    onChange={e => setText(e.target.value)}
+                    onChange={e => { setText(e.target.value); setError(""); }}
                     placeholder="Tell us how we can improve the temple portal, services, or mela experience…"
                     className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none"
                     style={{ backgroundColor: C.cream, border: `1.5px solid ${C.border}`, color: C.darkText }}
                   />
                 </div>
 
+                {error && (
+                  <p className="text-xs text-red-500 font-semibold">{error}</p>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-full text-sm font-bold text-white transition-all hover:opacity-90"
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-full text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed"
                   style={{ background: `linear-gradient(90deg, ${C.orange}, ${C.gold})`, boxShadow: `0 6px 18px ${C.orange}55` }}
                 >
                   <Send size={14} />
-                  Submit Suggestion
+                  {loading ? "Submitting..." : "Submit Suggestion"}
                 </button>
               </form>
             )}
