@@ -145,7 +145,6 @@ class CreateAdminRequest(BaseModel):
 
 @router.get("/stats", response_model=AdminStats)
 async def get_admin_stats(
-    _: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Aggregated dashboard KPIs for admin overview."""
@@ -206,7 +205,7 @@ async def list_users(
 @router.get("/users/{user_id}", response_model=AdminUserResponse)
 async def get_user(
     user_id: int,
-    _: User = Depends(get_admin_user),
+     _: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Get a single user by ID."""
@@ -221,7 +220,7 @@ async def get_user(
 async def update_user(
     user_id: int,
     body: AdminUserUpdate,
-    _: User = Depends(get_admin_user),
+     _: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Update a user's profile fields or admin flag."""
@@ -269,7 +268,7 @@ async def delete_user(
 @router.post("/create-admin", response_model=AdminUserResponse)
 async def create_admin_user(
     body: CreateAdminRequest,
-    _: User = Depends(get_admin_user),
+     _: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new admin user with a password."""
@@ -369,7 +368,7 @@ async def list_support_tickets(
 async def update_ticket_status(
     ticket_id: int,
     body: SupportStatusUpdate,
-    _: User = Depends(get_admin_user),
+   _: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Update a support ticket's status and optionally add an admin reply."""

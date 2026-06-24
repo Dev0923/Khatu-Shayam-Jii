@@ -684,7 +684,7 @@ function VehiclePermits() {
                 </button>
               </div>
             ) : (
-              <button onClick={() => handleAction(p.id, "Pending")} disabled={actionId === p.id}
+              <button onClick={() => handleAction(p.id, "Denied")} disabled={actionId === p.id}
                 className="p-1.5 rounded-lg"
                 style={{ backgroundColor: `${C.muted}15`, color: C.muted }}>
                 <RefreshCw size={12} />
