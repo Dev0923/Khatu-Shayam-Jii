@@ -21,6 +21,8 @@ import { TempleHistoryPage } from "./pages/TempleHistoryPage";
 import { ImportantDaysPage } from "./pages/ImportantDaysPage";
 import { NewsEventsPage } from "./pages/NewsEventsPage";
 import { AboutKhatuPage } from "./pages/AboutKhatuPage";
+import { LostFoundPage } from "./pages/LostFoundPage";
+import { ReportLostItemPage } from "./pages/ReportLostItemPage";
 
 export const router = createBrowserRouter([
   { path: "/", Component: HomePage },
@@ -44,6 +46,8 @@ export const router = createBrowserRouter([
   { path: "/services/important-days", Component: ImportantDaysPage },
   { path: "/services/news-events", Component: NewsEventsPage },
   { path: "/services/about-khatu", Component: AboutKhatuPage },
+  { path: "/services/lost-and-found", Component: LostFoundPage },
+  { path: "/services/lost-and-found/report", Component: ReportLostItemPage },
   { path: "/services/:slug", Component: ServicePage },
   { path: "*", Component: HomePage },
 ]);

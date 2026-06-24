@@ -147,3 +147,51 @@ class CrowdDensityLog(Base):
     current_count = Column(Integer, nullable=False)
     status = Column(String(50), nullable=False)  # "Normal", "Moderate", "Dense", "Critical"
     recorded_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+class LostItem(Base):
+    __tablename__ = "khatu_lost_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    category = Column(String(100), nullable=False)
+    date_lost = Column(DateTime(timezone=True), nullable=False)
+    location = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    contact_name = Column(String(255), nullable=False)
+    contact_phone = Column(String(20), nullable=False)
+    photo_url = Column(Text, nullable=True)
+    user_id = Column(Integer, ForeignKey("khatu_users.id", ondelete="SET NULL"), nullable=True)
+    status = Column(String(50), default="Lost")  # Lost, Found, Claimed
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+class FoundItem(Base):
+    __tablename__ = "khatu_found_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    category = Column(String(100), nullable=False)
+    date_found = Column(DateTime(timezone=True), nullable=False)
+    location_found = Column(String(255), nullable=False)
+    storage_location = Column(String(255), nullable=True)
+    description = Column(Text, nullable=True)
+    photo_url = Column(Text, nullable=True)
+    status = Column(String(50), default="In Storage")  # In Storage, Claimed
+    claim_id = Column(String(100), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+class LostPerson(Base):
+    __tablename__ = "khatu_lost_persons"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    age = Column(Integer, nullable=False)
+    gender = Column(String(20), nullable=True)
+    clothes_description = Column(Text, nullable=True)
+    last_seen_location = Column(String(255), nullable=False)
+    last_seen_time = Column(DateTime(timezone=True), nullable=False)
+    contact_name = Column(String(255), nullable=False)
+    contact_phone = Column(String(20), nullable=False)
+    photo_url = Column(Text, nullable=True)
+    status = Column(String(50), default="Missing")  # Missing, Found
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

@@ -38,7 +38,7 @@ const C = {
 type Section =
   | "dashboard" | "donations" | "vehicle" | "permissions" | "epass"
   | "livestatus" | "gallery" | "announcements" | "support" | "reports"
-  | "users";
+  | "users" | "lostfound";
 
 /* ─── sidebar nav ───────────────────────────────────────── */
 const NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
@@ -53,6 +53,7 @@ const NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
   { id: "announcements", label: "Announcements", icon: <Megaphone size={16} /> },
   { id: "support", label: "Support", icon: <MessageCircle size={16} /> },
   { id: "reports", label: "Reports", icon: <BarChart2 size={16} /> },
+  { id: "lostfound", label: "Lost & Found", icon: <Search size={16} /> },
 ];
 
 /* ─── Status maps ───────────────────────────────────────── */
@@ -1372,6 +1373,66 @@ function Announcements() {
   );
 }
 
+function LostFoundSection() {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  const fetchItems = async () => {
+    try {
+      const { lostFoundApi } = await import("../services/lostFoundApi");
+      const data = await lostFoundApi.getAdminItems();
+      setItems(data.lost_items || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNotify = async (id: number) => {
+    try {
+      const { lostFoundApi } = await import("../services/lostFoundApi");
+      await lostFoundApi.notifyUser(id);
+      alert("Notification sent to the user successfully.");
+      fetchItems();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to send notification.");
+    }
+  };
+
+  if (loading) return <LoadingSpinner msg="Loading Lost & Found data..." />;
+
+  const cols = ["ID", "Category", "Item", "Reporter", "Contact", "Status", "Actions"];
+  const rows = items.map(item => [
+    `#${item.id}`,
+    item.category,
+    item.description || "N/A",
+    item.contact_name,
+    item.contact_phone,
+    <Chip status={item.status.toLowerCase()} />,
+    <div className="flex items-center gap-1" key={item.id}>
+      {item.status !== "Found" && (
+        <button onClick={() => handleNotify(item.id)} className="px-2 py-1 bg-[#1F2F8C] text-white rounded text-xs font-semibold">
+          Notify User
+        </button>
+      )}
+    </div>
+  ]);
+
+  return (
+    <div>
+      <Head title="Lost & Found" sub="Manage reported items and notify users" />
+      <Table cols={cols} rows={rows} />
+    </div>
+  );
+}
+
+
 /* ═══════════════════════════════════════════════════════════
    ROOT — AdminPage
 ═══════════════════════════════════════════════════════════ */
@@ -1418,7 +1479,7 @@ export function AdminPage() {
     dashboard: "Dashboard", users: "User Management", donations: "Donations",
     vehicle: "Vehicle Permits", permissions: "Permissions", epass: "E-Pass & Bookings",
     livestatus: "Live Status", gallery: "Gallery", announcements: "Announcements",
-    support: "Support Tickets", reports: "Reports",
+    support: "Support Tickets", reports: "Reports", lostfound: "Lost & Found",
   };
 
   return (
@@ -1509,6 +1570,7 @@ export function AdminPage() {
           {section === "announcements" && <Announcements />}
           {section === "support" && <Support />}
           {section === "reports" && <Reports />}
+          {section === "lostfound" && <LostFoundSection />}
         </main>
       </div>
     </div>
