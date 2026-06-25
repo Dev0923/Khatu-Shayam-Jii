@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from 'react-leaflet';
 import { DivIcon, type Map as LeafletMap } from 'leaflet';
 import { 
   Building, MapPin, Search, ShieldCheck, Star, CalendarDays, ArrowRight, 
@@ -20,6 +20,14 @@ function MapFocus({ center, zoom }: { center: [number, number]; zoom: number }) 
   }, [center, zoom, map]);
   return null;
 }
+// Custom Leaflet Icon
+const customIcon = new DivIcon({
+  html: `<div class="bg-amber-800 text-white p-2 rounded-full shadow-lg border-2 border-white flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>`,
+  className: 'custom-leaflet-icon',
+  iconSize: [36, 36],
+  iconAnchor: [18, 36],
+  popupAnchor: [0, -36],
+});
 
 export function AccommodationBookingPage() {
   const [flowStep, setFlowStep] = useState<'date' | 'hotels'>('date');
@@ -303,14 +311,14 @@ export function AccommodationBookingPage() {
                   <div
                     key={property.id}
                     onClick={() => handleCardClick(property)}
-                    className={`bg-white rounded-2xl border transition-all duration-300 cursor-pointer overflow-hidden flex flex-col md:flex-row ${
+                    className={`bg-white rounded-2xl border transition-all duration-300 cursor-pointer flex flex-col sm:flex-row min-h-[220px] overflow-hidden ${
                       isSelected 
-                        ? 'border-amber-700 shadow-md ring-1 ring-amber-700/30' 
-                        : 'border-slate-100 hover:border-slate-200 hover:shadow-sm'
+                        ? 'border-amber-700 shadow-lg ring-1 ring-amber-700/50' 
+                        : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
                     }`}
                   >
                     {/* Thumbnail Image */}
-                    <div className="w-full md:w-2/5 h-48 md:h-auto relative bg-slate-100 overflow-hidden shrink-0">
+                    <div className="w-full sm:w-2/5 md:w-1/3 h-52 sm:h-auto shrink-0 relative bg-slate-100">
                       <img 
                         src={property.image_url} 
                         alt={property.name}
@@ -319,19 +327,19 @@ export function AccommodationBookingPage() {
                           e.currentTarget.src = "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80";
                         }}
                       />
-                      <span className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                      <span className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm text-white px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider shadow-sm">
                         {property.type}
                       </span>
                     </div>
 
                     {/* Meta Details */}
-                    <div className="w-full md:w-3/5 p-5 flex flex-col justify-between gap-4">
+                    <div className="flex-1 p-5 flex flex-col justify-between gap-4 bg-white z-10">
                       <div className="space-y-1">
                         <div className="flex justify-between items-start gap-2">
                           <h3 className="font-bold text-slate-800 text-lg leading-snug">{property.name}</h3>
-                          <div className="flex items-center text-amber-500 gap-1 text-xs shrink-0">
+                          <div className="flex items-center text-amber-500 gap-1 text-xs shrink-0 bg-amber-50 px-2 py-1 rounded-md">
                             <Star className="w-3.5 h-3.5 fill-current" />
-                            <span className="font-bold text-slate-700">4.5</span>
+                            <span className="font-bold text-amber-900">4.5</span>
                           </div>
                         </div>
                         
@@ -343,39 +351,39 @@ export function AccommodationBookingPage() {
                       {/* Amenities Row */}
                       <div className="flex flex-wrap gap-1.5">
                         {property.amenities.slice(0, 4).map((amenity, idx) => (
-                          <span key={idx} className="bg-slate-50 border border-slate-100 text-slate-600 rounded px-2 py-0.5 text-[10px] font-medium flex items-center gap-1">
+                          <span key={idx} className="bg-slate-50 border border-slate-100 text-slate-600 rounded px-2 py-1 text-[10px] font-medium flex items-center gap-1">
                             {getAmenityIcon(amenity)} {amenity}
                           </span>
                         ))}
                         {property.amenities.length > 4 && (
-                          <span className="text-[10px] text-slate-400 font-semibold px-1 mt-0.5">
+                          <span className="text-[10px] text-slate-400 font-bold px-1 mt-1">
                             +{property.amenities.length - 4} more
                           </span>
                         )}
                       </div>
 
                       {/* Card Footer: Pricing and Book buttons */}
-                      <div className="flex justify-between items-center border-t border-slate-50 pt-3">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-t border-slate-100 pt-4 mt-auto">
                         <div>
-                          <p className="text-[10px] text-slate-400 uppercase tracking-wider">Starting from</p>
-                          <p className="text-lg font-black text-amber-900 font-serif">Rs. {property.price_start}<span className="text-xs text-slate-400 font-sans font-normal">/night</span></p>
+                          <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Starting from</p>
+                          <p className="text-xl font-black text-amber-900 font-serif">Rs. {property.price_start}<span className="text-xs text-slate-400 font-sans font-medium"> / night</span></p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 w-full sm:w-auto">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               openDetails(property);
                             }}
-                            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors"
+                            className="flex-1 sm:flex-none px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors text-center"
                           >
-                            View Rooms
+                            Details
                           </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleBookingStart(property);
                             }}
-                            className="px-4 py-2 bg-amber-800 hover:bg-amber-950 text-white font-bold rounded-xl text-xs transition-all shadow-sm active:scale-95"
+                            className="flex-1 sm:flex-none px-5 py-2.5 bg-amber-800 hover:bg-amber-900 text-white font-bold rounded-xl text-xs transition-all shadow-md hover:shadow-lg active:scale-95 text-center"
                           >
                             Book Now
                           </button>
@@ -386,86 +394,52 @@ export function AccommodationBookingPage() {
                 );
               })
             )}
-          </div>
-
-          {/* Interactive Map (Leaflet) */}
-          <div className="lg:col-span-5 rounded-3xl border border-slate-200 overflow-hidden shadow-sm h-[500px] lg:h-full min-h-[350px] relative bg-slate-100">
-            <div className="absolute top-4 left-4 z-[1000] bg-white/95 backdrop-blur-sm shadow border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-2">
-              <Compass className="w-4 h-4 text-amber-800 animate-pulse" />
-              <span className="text-[10px] font-bold text-slate-700 tracking-wide">Click map pins to explore properties</span>
             </div>
-            
-            <MapContainer
-              center={KHATU_CENTER}
-              zoom={14}
-              className="h-full w-full"
-              whenReady={(event) => {
-                mapRef.current = event.target;
-              }}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              
-              {/* Center Temple marker */}
-              <Marker 
-                position={KHATU_CENTER}
-                icon={new DivIcon({
-                  html: `
-                    <div style="
-                      width: 24px;
-                      height: 24px;
-                      border-radius: 50%;
-                      background-color: #ef4444;
-                      border: 3px solid #ffffff;
-                      box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
-                    "></div>
-                  `,
-                  className: '',
-                  iconSize: [24, 24],
-                })}
+
+            {/* Leaflet Map (Right Side) */}
+            <div className="hidden lg:block lg:col-span-5 h-[750px] sticky top-6 z-10 rounded-2xl overflow-hidden border border-slate-200 shadow-sm bg-slate-100">
+              <MapContainer
+                center={[27.3664, 75.3970]} // Khatu Shyam Coordinates
+                zoom={14}
+                style={{ height: '100%', width: '100%', zIndex: 0 }}
+                ref={mapRef}
+                zoomControl={false}
               >
-                <Popup>
-                  <p className="font-bold text-xs">Shree Khatu Shyam Ji Mandir (Center)</p>
-                </Popup>
-              </Marker>
-
-              {selectedProperty && (
-                <MapFocus center={[selectedProperty.latitude, selectedProperty.longitude]} zoom={15} />
-              )}
-
-              {properties.map(property => (
-                <Marker
-                  key={property.id}
-                  position={[property.latitude, property.longitude]}
-                  icon={getMarkerIcon(property, selectedProperty?.id === property.id)}
-                  eventHandlers={{
-                    click: () => {
-                      setSelectedProperty(property);
-                    }
-                  }}
-                >
-                  <Popup>
-                    <div className="space-y-1.5 p-1 min-w-[150px]">
-                      <h4 className="font-bold text-xs text-slate-800 leading-tight">{property.name}</h4>
-                      <p className="text-[10px] text-slate-500 font-semibold">{property.type} &bull; {property.distance} km from Mandir</p>
-                      <p className="text-xs font-black text-amber-900 font-serif border-t pt-1 mt-1">Starting Rs. {property.price_start}</p>
-                      <button
-                        onClick={() => openDetails(property)}
-                        className="w-full py-1 mt-1 bg-amber-800 hover:bg-amber-900 text-white rounded text-[10px] font-bold transition-colors"
-                      >
-                        View & Book
-                      </button>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
+                <ZoomControl position="bottomright" />
+                <TileLayer
+                  url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                />
+                
+                {properties.map(property => (
+                  <Marker 
+                    key={property.id} 
+                    position={[property.latitude, property.longitude]}
+                    icon={customIcon}
+                    eventHandlers={{
+                      click: () => {
+                        handleCardClick(property);
+                      },
+                    }}
+                  >
+                    <Popup className="custom-popup">
+                      <div className="font-sans">
+                        <h4 className="font-bold text-slate-800">{property.name}</h4>
+                        <p className="text-xs text-slate-500">{property.type} • Rs. {property.price_start}</p>
+                        <button 
+                          onClick={() => openDetails(property)}
+                          className="mt-2 w-full bg-amber-800 text-white text-[10px] font-bold py-1.5 rounded"
+                        >
+                          View Details
+                        </button>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            </div>
           </div>
         </div>
-      </div>
-
       )}
 
       {/* Property Details Modal */}
@@ -474,105 +448,104 @@ export function AccommodationBookingPage() {
           <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-amber-100 max-h-[85vh] flex flex-col">
             
             {/* Modal Header */}
-            <div className="relative bg-slate-900 text-white p-6 shrink-0 flex justify-between items-start">
-              <div className="space-y-1 pr-6">
-                <span className="px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded text-[9px] font-bold uppercase tracking-wider border border-amber-500/30">
-                  {selectedProperty.type}
-                </span>
-                <h3 className="text-xl font-bold font-serif text-amber-100">{selectedProperty.name}</h3>
-                <p className="text-xs text-slate-400 flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {selectedProperty.distance} km from temple entry gate</p>
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center shrink-0">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 mb-1 block">Property Details</span>
+                <h3 className="text-xl font-bold font-serif text-slate-800">{selectedProperty.name}</h3>
               </div>
-              <button 
-                onClick={() => setDetailModalOpen(false)}
-                className="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-full p-2 text-sm transition-colors focus:outline-none"
-              >
-                ✕
+              <button onClick={() => setDetailModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Modal Content (Scrollable) */}
-            <div className="p-6 overflow-y-auto space-y-6 flex-1">
-              {/* Description */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">About this lodging</h4>
-                <p className="text-slate-600 text-sm leading-relaxed">{selectedProperty.description}</p>
-              </div>
-
-              {/* Amenities */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Available Amenities</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {selectedProperty.amenities.map((amenity, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-xs text-slate-600 p-2.5 bg-slate-50 border border-slate-100 rounded-lg">
-                      <span className="text-amber-800 shrink-0">{getAmenityIcon(amenity)}</span>
-                      <span className="font-semibold text-slate-700">{amenity}</span>
-                    </div>
-                  ))}
+            {/* Modal Body (Scrollable) */}
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col md:flex-row gap-6">
+              
+              <div className="w-full md:w-1/3 shrink-0 space-y-4">
+                <div className="rounded-2xl overflow-hidden border border-slate-100 aspect-[4/3]">
+                  <img src={selectedProperty.image_url} className="w-full h-full object-cover" alt={selectedProperty.name} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">About</p>
+                  <p className="text-sm text-slate-600 leading-relaxed">{selectedProperty.description}</p>
                 </div>
               </div>
 
-              {/* Room Availability Matrix */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Room Availability & Tariff</h4>
-                <div className="border border-slate-100 rounded-2xl overflow-hidden divide-y divide-slate-100">
-                  {selectedProperty.rooms.map(room => (
-                    <div key={room.id} className="p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 hover:bg-slate-50/40 transition-colors">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-sm text-slate-800">{room.type}</span>
-                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase ${room.category === 'AC' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}`}>
-                            {room.category}
-                          </span>
-                        </div>
-                        <p className="text-[10px] text-slate-400 font-semibold">Available Units: {room.available_rooms}</p>
+              <div className="flex-1 space-y-6">
+                
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Available Amenities</h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {selectedProperty.amenities.map((amenity, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-xs text-slate-600 p-2.5 bg-slate-50 border border-slate-100 rounded-lg">
+                        <span className="text-amber-800 shrink-0">{getAmenityIcon(amenity)}</span>
+                        <span className="font-semibold text-slate-700">{amenity}</span>
                       </div>
-                      <div className="flex justify-between sm:justify-end items-center gap-4">
-                        <div className="sm:text-right">
-                          <p className="text-xs text-slate-400">Price per night</p>
-                          <p className="text-base font-extrabold text-amber-900 font-serif">Rs. {room.base_price}</p>
-                        </div>
-                        <button
-                          onClick={() => handleBookingStart(selectedProperty, room)}
-                          disabled={room.available_rooms <= 0}
-                          className="px-4 py-2 bg-amber-800 hover:bg-amber-900 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-40 disabled:pointer-events-none active:scale-95 shadow-sm"
-                        >
-                          {room.available_rooms > 0 ? 'Book Room' : 'Sold Out'}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Policies */}
-              <div className="space-y-3 bg-amber-50/20 border border-amber-100/40 p-5 rounded-2xl">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 text-amber-800">
-                  <ShieldCheck className="w-4 h-4" /> Board Boarding Rules & Policies
-                </h4>
-                <ul className="space-y-1.5">
-                  {selectedProperty.policies.map((policy, idx) => (
-                    <li key={idx} className="text-xs text-slate-600 flex items-start gap-2">
-                      <span className="text-emerald-600 font-bold mt-0.5">✓</span>
-                      <span>{policy}</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Room Availability & Tariff</h4>
+                  <div className="border border-slate-100 rounded-2xl overflow-hidden divide-y divide-slate-100">
+                    {selectedProperty.rooms.map(room => (
+                      <div key={room.id} className="p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 hover:bg-slate-50/40 transition-colors">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm text-slate-800">{room.type}</span>
+                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase ${room.category === 'AC' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}`}>
+                              {room.category}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 font-semibold">Available Units: {room.available_rooms}</p>
+                        </div>
+                        <div className="flex justify-between sm:justify-end items-center gap-4">
+                          <div className="sm:text-right">
+                            <p className="text-xs text-slate-400">Price per night</p>
+                            <p className="text-base font-extrabold text-amber-900 font-serif">Rs. {room.base_price}</p>
+                          </div>
+                          <button
+                            onClick={() => handleBookingStart(selectedProperty, room)}
+                            disabled={room.available_rooms <= 0}
+                            className="px-4 py-2 bg-amber-800 hover:bg-amber-900 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-40 disabled:pointer-events-none active:scale-95 shadow-sm"
+                          >
+                            {room.available_rooms > 0 ? 'Book Room' : 'Sold Out'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-3 bg-amber-50/20 border border-amber-100/40 p-5 rounded-2xl">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 text-amber-800">
+                    <ShieldCheck className="w-4 h-4" /> Board Boarding Rules & Policies
+                  </h4>
+                  <ul className="space-y-1.5">
+                    {selectedProperty.policies.map((policy, idx) => (
+                      <li key={idx} className="text-xs text-slate-600 flex items-start gap-2">
+                        <span className="text-emerald-600 font-bold mt-0.5">✓</span>
+                        <span>{policy}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="border-t border-slate-100 p-4 bg-slate-50 flex justify-between items-center shrink-0">
+            <div className="border-t border-slate-100 p-4 bg-slate-50 flex flex-col-reverse sm:flex-row justify-between items-center shrink-0 gap-4">
               <a 
                 href={`https://www.google.com/search?q=${encodeURIComponent(selectedProperty.name + " Khatu Shyam")}`} 
                 target="_blank" 
                 rel="noreferrer" 
-                className="text-amber-800 text-xs font-bold hover:underline flex items-center gap-1.5"
+                className="w-full sm:w-auto px-5 py-2.5 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors border border-amber-200"
               >
-                View Official Website & Maps
+                <MapPin className="w-3.5 h-3.5" /> View Official Website & Maps
               </a>
               <button
                 onClick={() => setDetailModalOpen(false)}
-                className="px-5 py-2.5 border border-slate-300 text-slate-700 font-bold rounded-xl text-xs hover:bg-slate-100 transition-colors"
+                className="w-full sm:w-auto px-5 py-2.5 border border-slate-300 text-slate-700 font-bold rounded-xl text-xs hover:bg-slate-100 transition-colors text-center"
               >
                 Close details
               </button>
