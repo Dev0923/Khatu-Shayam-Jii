@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, Rotate3d, ChevronLeft, ChevronRight, MapPin, Info, X } from "lucide-react";
-import { Footer } from "../components/Footer";
 import { AnimatePresence, motion } from "framer-motion";
 import "pannellum/build/pannellum.js";
 import "pannellum/build/pannellum.css";
@@ -168,9 +167,7 @@ export function GalleryVirtualTourPage() {
       {/* Back bar */}
       <div className="w-full px-6 py-4 flex items-center gap-2 z-10" style={{ backgroundColor: C.darkBlue }}>
         <img src={logoImg} alt="Logo" className="w-7 h-7 rounded-full object-cover border-2" style={{ borderColor: C.orange }} />
-        <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-white text-sm font-semibold hover:opacity-80 ml-2">
-          <ArrowLeft size={15} /> Back to Home
-        </button>
+
         <div className="flex items-center gap-3 ml-4">
           <button onClick={() => navigate("/gallery")} className="text-sm font-semibold hover:opacity-80" style={{ color: "rgba(255,255,255,0.55)" }}>Photos</button>
           <button onClick={() => navigate("/gallery/videos")} className="text-sm font-semibold hover:opacity-80" style={{ color: "rgba(255,255,255,0.55)" }}>Videos</button>
@@ -298,8 +295,7 @@ export function GalleryVirtualTourPage() {
         </div>
       </div>
 
-      <Footer />
-
+      
       <style>{`
         .hs-dot {
           width: 14px;

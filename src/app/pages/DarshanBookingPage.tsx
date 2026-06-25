@@ -1,6 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { Footer } from "../components/Footer";
 import {
   ArrowLeft,
   CalendarDays,
@@ -598,14 +597,7 @@ export function DarshanBookingPage() {
     return (
       <div className="min-h-screen" style={{ backgroundColor: C.cream }}>
         {/* Top bar */}
-        <div className="w-full px-6 py-4 flex items-center" style={{ backgroundColor: C.darkBlue }}>
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-white text-sm font-semibold hover:opacity-80"
-          >
-            <ArrowLeft size={16} /> Back to Home
-          </button>
-        </div>
+
 
         <div className="max-w-xl mx-auto px-6 py-16 flex flex-col items-center text-center">
           {/* Success animation circle */}
@@ -666,13 +658,7 @@ export function DarshanBookingPage() {
             >
               <FileDown size={16} /> Download PDF Pass
             </button>
-            <button
-              onClick={() => navigate("/")}
-              className="flex-1 py-3.5 rounded-full text-sm font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
-              style={{ border: `1.5px solid ${C.darkBlue}`, color: C.darkBlue, backgroundColor: C.white }}
-            >
-              Back to Home
-            </button>
+
           </div>
         </div>
 
@@ -697,8 +683,7 @@ export function DarshanBookingPage() {
           }
         `}</style>
 
-        <Footer />
-      </div>
+              </div>
     );
   }
 
@@ -1272,7 +1257,6 @@ export function DarshanBookingPage() {
         }
       `}</style>
 
-      <Footer />
-    </div>
+          </div>
   );
 }

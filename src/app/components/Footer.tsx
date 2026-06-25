@@ -17,7 +17,7 @@ const C = {
 
 function SocialIcon({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <a href={href} className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
+    <a href={href} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
       style={{ backgroundColor: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.15)" }}>
       {children}
     </a>
@@ -42,6 +42,9 @@ export function Footer() {
   const [submitted, setSubmitted] = useState(false);
   const [text, setText]           = useState("");
   const [name, setName]           = useState("");
+  const [email, setEmail]         = useState("");
+  const [error, setError]         = useState("");
+  const [loading, setLoading]     = useState(false);
   const [showTop, setShowTop]     = useState(false);
 
   useEffect(() => {
@@ -50,16 +53,47 @@ export function Footer() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!text.trim()) return;
-    setSubmitted(true);
-    setTimeout(() => {
-      setOpen(false);
-      setSubmitted(false);
-      setText("");
-      setName("");
-    }, 2800);
+    if (text.trim().length < 10) {
+      setError("Suggestion must be at least 10 characters long.");
+      return;
+    }
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/support/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim() || "Anonymous Devotee",
+          email: email.trim() || "anonymous@devotee.com",
+          subject: "Portal Suggestion",
+          message: text.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        setSubmitted(true);
+        setTimeout(() => {
+          setOpen(false);
+          setSubmitted(false);
+          setText("");
+          setName("");
+          setEmail("");
+          setError("");
+        }, 2800);
+      } else {
+        const err = await response.json();
+        setError(err.detail?.[0]?.msg || err.detail || "Failed to submit. Please try again.");
+      }
+    } catch (err) {
+      setError("Network error. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -89,16 +123,16 @@ export function Footer() {
                 The official digital gateway for Shri Khatu Shyam Ji Temple. Dedicated to ensuring a safe, seamless, and spiritual experience for millions of devotees.
               </p>
               <div className="flex gap-2">
-                <SocialIcon href="#">
+                <SocialIcon href="https://www.facebook.com/khatushyamjidarshan/">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
                 </SocialIcon>
-                <SocialIcon href="#">
+                <SocialIcon href="https://www.instagram.com/khatushyamjitemplesikar/?hl=en">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
                 </SocialIcon>
-                <SocialIcon href="#">
+                <SocialIcon href="https://x.com/ShriKhatuShyam_?lang=en">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                 </SocialIcon>
-                <SocialIcon href="#">
+                <SocialIcon href="https://www.youtube.com/@ShyamBhaktiRang/streams">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#152060"/></svg>
                 </SocialIcon>
               </div>
@@ -264,6 +298,19 @@ export function Footer() {
                   />
                 </div>
 
+                {/* Email */}
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: "#1F2F8C" }}>Email Address <span style={{ color: C.muted }}>(optional, for replies)</span></label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="devotee@example.com"
+                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
+                    style={{ backgroundColor: C.cream, border: `1.5px solid ${C.border}`, color: C.darkText }}
+                  />
+                </div>
+
                 {/* Suggestion */}
                 <div>
                   <label className="block text-xs font-semibold mb-1.5" style={{ color: "#1F2F8C" }}>
@@ -273,20 +320,25 @@ export function Footer() {
                     required
                     rows={4}
                     value={text}
-                    onChange={e => setText(e.target.value)}
+                    onChange={e => { setText(e.target.value); setError(""); }}
                     placeholder="Tell us how we can improve the temple portal, services, or mela experience…"
                     className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none"
                     style={{ backgroundColor: C.cream, border: `1.5px solid ${C.border}`, color: C.darkText }}
                   />
                 </div>
 
+                {error && (
+                  <p className="text-xs text-red-500 font-semibold">{error}</p>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-full text-sm font-bold text-white transition-all hover:opacity-90"
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-full text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed"
                   style={{ background: `linear-gradient(90deg, ${C.orange}, ${C.gold})`, boxShadow: `0 6px 18px ${C.orange}55` }}
                 >
                   <Send size={14} />
-                  Submit Suggestion
+                  {loading ? "Submitting..." : "Submit Suggestion"}
                 </button>
               </form>
             )}

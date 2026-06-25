@@ -2,18 +2,20 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.exceptions import register_exception_handlers
-from app.api.v1.auth import router as auth_router
-from app.api.v1.vehicles import router as vehicles_router
-from app.api.v1.permissions import router as permissions_router
-from app.api.v1.gates import router as gates_router
-from app.api.v1.scan import router as scan_router
 
-from .database import init_db
-from .routes.bookings import router as bookings_router
-from .routes.donations import router as donations_router
-from .routes.support import router as support_router
-from .routes.crowd import router as crowd_router
+from database import init_db
+from routes.bookings import router as bookings_router
+from routes.donations import router as donations_router
+from routes.support import router as support_router
+from routes.crowd import router as crowd_router
+from routes.bandhara import router as bandhara_router
+from routes.alerts import router as alerts_router
+from routes.vehicles import router as vehicles_router
+from routes.auth import router as auth_router
+from routes.admin import router as admin_router
+from routes.lost_found import router as lost_found_router
+from routes.general_permissions import router as general_permissions_router
+from routes.accommodation import router as accommodation_router
 
 
 @asynccontextmanager
@@ -34,29 +36,35 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000", "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-register_exception_handlers(app)
-
-app.include_router(auth_router, prefix="/api/v1")
-app.include_router(vehicles_router, prefix="/api/v1")
-app.include_router(permissions_router, prefix="/api/v1")
-app.include_router(gates_router, prefix="/api/v1")
-app.include_router(scan_router, prefix="/api/v1")
-
-# Register routers from incoming branch
+# ── Register all routers ────────────────────────────────
+app.include_router(auth_router)
 app.include_router(bookings_router)
 app.include_router(donations_router)
 app.include_router(support_router)
 app.include_router(crowd_router)
+app.include_router(bandhara_router)
+app.include_router(alerts_router)
+app.include_router(vehicles_router)
+app.include_router(admin_router)
+app.include_router(lost_found_router)
+app.include_router(general_permissions_router)
+app.include_router(accommodation_router)
 
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+from fastapi import WebSocket
+@app.websocket("/wstest")
+async def wstest(ws: WebSocket):
+    await ws.accept()
+    await ws.send_text("Hello")
 
 @app.get("/api/stack")
 def stack() -> dict[str, list[str]]:
@@ -73,3 +81,4 @@ def stack() -> dict[str, list[str]]:
         ],
         "backend": ["FastAPI", "Uvicorn", "PostgreSQL", "SQLAlchemy", "asyncpg"],
     }
+

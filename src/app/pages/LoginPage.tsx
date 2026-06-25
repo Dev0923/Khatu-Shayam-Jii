@@ -82,7 +82,11 @@ export function LoginPage() {
             {/* Form Card */}
             <div className="rounded-2xl px-5 py-4" style={{ backgroundColor: C.cardBg, border: `1px solid ${C.border}` }}>
               {portal === "admin"
+<<<<<<< HEAD
                 ? <AdminForm method={adminMethod} setMethod={setAdminMethod} showPassword={showPassword} setShowPassword={setShowPassword} onLogin={() => { sessionStorage.setItem("adminAuth", "true"); navigate("/admin"); }} />
+=======
+                ? <AdminForm method={adminMethod} setMethod={setAdminMethod} />
+>>>>>>> 25b5f0ffdd1aed340544077b9e9be995e657c164
                 : <DevoteeOTPForm />
               }
             </div>
@@ -235,7 +239,7 @@ function DevoteeOTPForm() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/login-password`, {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -666,9 +670,50 @@ function DevoteeOTPForm() {
 
 /* ── Admin Form (unchanged) ────────────────────── */
 
-function AdminForm({ method, setMethod, showPassword, setShowPassword, onLogin }: {
-  method: AdminMethod; setMethod: (m: AdminMethod) => void; showPassword: boolean; setShowPassword: (v: boolean) => void; onLogin: () => void;
+function AdminForm({ method, setMethod }: {
+  method: AdminMethod; setMethod: (m: AdminMethod) => void;
 }) {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (method !== "password") return;
+    setError("");
+    if (!email || !password) {
+      setError("Please enter both email and password.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: email.trim(), password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Invalid credentials");
+
+      if (!data.user.is_admin) {
+        throw new Error("Unauthorized: Account does not have admin privileges.");
+      }
+  
+      localStorage.setItem("authToken", data.access_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      console.log("BEFORE ADMIN NAVIGATION");
+      window.location.href = "/admin"; 
+      console.log("After ADMIN NAVIGATION");
+    } catch (err: any) {
+      setError(err.message || "Failed to log in.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <>
       <div className="flex items-start gap-2 rounded-lg px-3 py-2 mb-3" style={{ backgroundColor: "rgba(247,148,29,0.10)", border: "1px solid rgba(247,148,29,0.40)" }}>
@@ -677,15 +722,24 @@ function AdminForm({ method, setMethod, showPassword, setShowPassword, onLogin }
           <strong>Authorized personnel only.</strong> Unauthorized access is strictly prohibited.
         </p>
       </div>
+
+      {error && (
+        <div className="flex items-center gap-2 rounded-lg px-3 py-2 mb-3"
+          style={{ backgroundColor: `${C.red}10`, border: `1px solid ${C.red}30` }}>
+          <AlertTriangle size={13} style={{ color: C.red, flexShrink: 0 }} />
+          <p style={{ color: C.red, fontSize: "0.72rem" }}>{error}</p>
+        </div>
+      )}
+
       <div className="flex mb-3 rounded-lg p-0.5" style={{ backgroundColor: C.inputBg, border: `1px solid ${C.border}` }}>
         <MethodTab active={method === "password"} onClick={() => setMethod("password")} icon={<KeyRound size={12} />} label="Password Login" />
         <MethodTab active={method === "otp"} onClick={() => setMethod("otp")} icon={<Smartphone size={12} />} label="OTP Login" />
       </div>
-      <form className="flex flex-col gap-2.5" onSubmit={e => { e.preventDefault(); onLogin(); }}>
-        <DarkInput label="Admin Email" icon={<Mail size={15} color={C.orange} />} type="email" placeholder="admin@shyamsarathi.gov.in" />
+      <form className="flex flex-col gap-2.5" onSubmit={handleSubmit}>
         {method === "password" ? (
           <>
-            <PasswordField label="Password" placeholder="Enter admin password" show={showPassword} toggle={() => setShowPassword(!showPassword)} />
+            <DarkInput label="Admin Email" icon={<Mail size={15} color={C.orange} />} type="email" placeholder="admin@ksj.com" value={email} onChange={e => setEmail(e.target.value)} />
+            <PasswordField label="Password" placeholder="Enter admin password" show={showPassword} toggle={() => setShowPassword(!showPassword)} value={password} onChange={e => setPassword(e.target.value)} />
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-1.5 cursor-pointer">
                 <input type="checkbox" style={{ accentColor: C.orange }} />
@@ -693,7 +747,11 @@ function AdminForm({ method, setMethod, showPassword, setShowPassword, onLogin }
               </label>
               <a href="#" style={{ color: C.orange, fontSize: "0.72rem" }}>Forgot Password?</a>
             </div>
-            <SubmitBtn color={C.darkBlue} label="Secure Login" />
+            <button type="submit" disabled={loading} className="w-full py-2 rounded-lg transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+              style={{ backgroundColor: C.darkBlue, color: "#fff", fontWeight: 600, fontSize: "0.88rem" }}>
+              {loading && <Loader2 size={14} className="animate-spin" />}
+              Secure Login
+            </button>
           </>
         ) : (
           <>

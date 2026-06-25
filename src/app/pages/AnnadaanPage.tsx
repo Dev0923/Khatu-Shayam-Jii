@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router";
-import { Footer } from "../components/Footer";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -947,13 +946,7 @@ export function AnnadaanPage() {
               >
                 <Download size={16} /> Download Seva Certificate
               </button>
-              <button
-                onClick={() => navigate("/")}
-                className="flex-1 py-3.5 rounded-full font-bold text-sm bg-white border transition-all hover:bg-slate-50 active:scale-98 cursor-pointer"
-                style={{ borderColor: C.darkBlue, color: C.darkBlue }}
-              >
-                Back to Home
-              </button>
+
             </div>
           </div>
         )}
@@ -1058,8 +1051,7 @@ export function AnnadaanPage() {
         className="fixed inset-0 w-screen h-screen pointer-events-none z-[1000]"
       />
 
-      <Footer />
-
+      
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(8px); }

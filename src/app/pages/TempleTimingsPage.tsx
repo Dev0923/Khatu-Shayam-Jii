@@ -29,14 +29,10 @@ export function TempleTimingsPage() {
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-[#1F2F8C] via-[#1F2F8C]/40 to-transparent" />
         
+
+
         {/* Overlay Content */}
         <div className="absolute bottom-0 left-0 p-8 lg:p-12 text-white w-full">
-          <button 
-            onClick={() => navigate("/")} 
-            className="flex items-center gap-2 text-white/90 text-sm font-semibold hover:text-white transition-colors mb-6 lg:mb-10 w-fit backdrop-blur-md bg-black/20 px-5 py-2.5 rounded-full border border-white/10"
-          >
-            <ArrowLeft size={16} /> Back to Home
-          </button>
           
           <motion.p 
             initial={{ opacity: 0, y: 10 }}

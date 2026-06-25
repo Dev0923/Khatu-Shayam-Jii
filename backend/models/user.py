@@ -56,6 +56,7 @@ class UserResponse(BaseModel):
     name: Optional[str] = None
     created_at: datetime
     last_login: Optional[datetime] = None
+    is_admin: bool = False
 
 
 class TokenResponse(BaseModel):
