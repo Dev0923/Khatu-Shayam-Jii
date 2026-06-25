@@ -217,13 +217,7 @@ export function DonationPage() {
               80G certificate will be emailed within 3–5 working days.
             </p>
           )}
-          <button
-            onClick={() => navigate("/")}
-            className="w-full py-3 rounded-full text-white text-sm font-bold transition-all hover:opacity-90"
-            style={{ background: `linear-gradient(90deg, ${C.orange}, ${C.gold})` }}
-          >
-            Back to Home
-          </button>
+
         </div>
       </div>
     );
@@ -323,9 +317,7 @@ export function DonationPage() {
       {/* Back bar */}
       <div className="w-full px-6 py-4 flex items-center gap-2" style={{ backgroundColor: C.darkBlue }}>
         <img src={logoImg} alt="Logo" className="w-7 h-7 rounded-full object-cover border-2" style={{ borderColor: C.orange }} />
-        <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-white text-sm font-semibold hover:opacity-80 ml-2">
-          <ArrowLeft size={15} /> Back to Home
-        </button>
+
         <span className="ml-auto text-white text-xs opacity-60 hidden sm:block">Shri Khatu Shyam Ji Temple Trust</span>
       </div>
 

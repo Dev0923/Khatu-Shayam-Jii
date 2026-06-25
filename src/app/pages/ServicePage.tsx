@@ -123,21 +123,14 @@ export function ServicePage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ backgroundColor: C.cream }}>
         <h1 className="text-2xl font-bold mb-3" style={{ color: C.darkBlue }}>Service not found</h1>
-        <button onClick={() => navigate("/")} className="px-6 py-2 rounded-full text-sm font-bold text-white" style={{ backgroundColor: C.orange }}>
-          Back to Home
-        </button>
+
       </div>
     );
   }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: C.cream }}>
-      {/* Top bar */}
-      <div className="w-full px-6 py-4 flex items-center" style={{ backgroundColor: C.darkBlue }}>
-        <button onClick={() => navigate("/")} className="flex items-center gap-2 text-white text-sm font-semibold hover:opacity-80">
-          <ArrowLeft size={16} /> Back to Home
-        </button>
-      </div>
+
 
       <div className="max-w-5xl mx-auto px-6 py-10">
         <div className="rounded-2xl overflow-hidden shadow-xl" style={{ backgroundColor: C.white, border: `1px solid ${C.border}` }}>

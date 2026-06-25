@@ -156,9 +156,7 @@ export function SiteMapPage() {
       {/* Back bar */}
       <div className="w-full px-6 py-4 flex items-center gap-2 print:hidden" style={{ backgroundColor: "#1F2F8C" }}>
         <img src={logoImg} alt="Logo" className="w-7 h-7 rounded-full object-cover border-2" style={{ borderColor: "#F7941D" }} />
-        <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-white text-sm font-semibold hover:opacity-80 ml-2">
-          <ArrowLeft size={15} /> Back to Home
-        </button>
+
         <span className="ml-auto text-white text-xs opacity-60 hidden sm:block">Shri Khatu Shyam Ji Temple Trust</span>
       </div>
 <div className="px-8 pt-10 pb-6 text-center border-b" style={{ borderColor: "#e8e8e8" }}>
