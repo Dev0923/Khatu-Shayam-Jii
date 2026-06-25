@@ -6,9 +6,9 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import {
   Bell, Clock,
-    Users2, Sun, Cloud, CloudRain, CloudSun, CloudLightning,
-        CalendarDays,
-  } from "lucide-react";
+  Users2, Sun, Cloud, CloudRain, CloudSun, CloudLightning,
+  CalendarDays, Car, ShieldAlert, Phone, Heart, Shield, MapPin, X
+} from "lucide-react";
 import templeImg from "../../imports/khatu-shyam-ji.jpg";
 import logoImg from "../../imports/image-21.png";
 import imgLostFound from "../../imports/lost and found.avif";
