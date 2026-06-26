@@ -322,3 +322,30 @@ export async function updateAnnouncement(
 export async function deleteAnnouncement(id: number): Promise<void> {
   return apiFetch<void>(`/api/admin/announcements/${id}`, { method: "DELETE" });
 }
+
+// ── General Permissions ───────────────────────────────────
+
+export interface AdminGeneralPermission {
+  id: string; // permission_code
+  db_id: number;
+  name: string;
+  type: string;
+  subtype: string;
+  date: string;
+  purpose: string;
+  status: string;
+}
+
+export async function getGeneralPermissions(): Promise<AdminGeneralPermission[]> {
+  return apiFetch<AdminGeneralPermission[]>("/api/admin/general-permissions");
+}
+
+export async function updateGeneralPermissionStatus(
+  db_id: number,
+  status: string
+): Promise<void> {
+  return apiFetch<void>(`/api/admin/general-permissions/${db_id}/status`, {
+    method: "POST",
+    body: JSON.stringify({ status }),
+  });
+}

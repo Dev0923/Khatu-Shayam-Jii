@@ -15,6 +15,7 @@ import * as api from "../services/adminApi";
 import type {
   AdminUser, AdminDonation, AdminBooking,
   AdminSupportTicket, AdminVehiclePermit, AdminStats, Announcement,
+  AdminGeneralPermission,
 } from "../services/adminApi";
 
 /* ─── palette (site theme) ──────────────────────────────── */
@@ -58,21 +59,21 @@ const NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
 
 /* ─── Status maps ───────────────────────────────────────── */
 const STATUS_MAP: Record<string, { bg: string; tc: string; dot: string }> = {
-  pending:     { bg: "#FEF9C3", tc: "#854D0E", dot: "#EAB308" },
-  Pending:     { bg: "#FEF9C3", tc: "#854D0E", dot: "#EAB308" },
-  approved:    { bg: "#DCFCE7", tc: "#166534", dot: "#22C55E" },
-  Approved:    { bg: "#DCFCE7", tc: "#166534", dot: "#22C55E" },
-  completed:   { bg: "#DCFCE7", tc: "#166534", dot: "#22C55E" },
-  active:      { bg: "#DCFCE7", tc: "#166534", dot: "#22C55E" },
-  rejected:    { bg: "#FEE2E2", tc: "#991B1B", dot: "#EF4444" },
-  Denied:      { bg: "#FEE2E2", tc: "#991B1B", dot: "#EF4444" },
-  expired:     { bg: "#F3F4F6", tc: "#6B7280", dot: "#9CA3AF" },
-  inactive:    { bg: "#F3F4F6", tc: "#6B7280", dot: "#9CA3AF" },
-  used:        { bg: "#EDE9FE", tc: "#5B21B6", dot: "#8B5CF6" },
-  open:        { bg: "#FEE2E2", tc: "#991B1B", dot: "#EF4444" },
-  resolved:    { bg: "#DCFCE7", tc: "#166534", dot: "#22C55E" },
+  pending: { bg: "#FEF9C3", tc: "#854D0E", dot: "#EAB308" },
+  Pending: { bg: "#FEF9C3", tc: "#854D0E", dot: "#EAB308" },
+  approved: { bg: "#DCFCE7", tc: "#166534", dot: "#22C55E" },
+  Approved: { bg: "#DCFCE7", tc: "#166534", dot: "#22C55E" },
+  completed: { bg: "#DCFCE7", tc: "#166534", dot: "#22C55E" },
+  active: { bg: "#DCFCE7", tc: "#166534", dot: "#22C55E" },
+  rejected: { bg: "#FEE2E2", tc: "#991B1B", dot: "#EF4444" },
+  Denied: { bg: "#FEE2E2", tc: "#991B1B", dot: "#EF4444" },
+  expired: { bg: "#F3F4F6", tc: "#6B7280", dot: "#9CA3AF" },
+  inactive: { bg: "#F3F4F6", tc: "#6B7280", dot: "#9CA3AF" },
+  used: { bg: "#EDE9FE", tc: "#5B21B6", dot: "#8B5CF6" },
+  open: { bg: "#FEE2E2", tc: "#991B1B", dot: "#EF4444" },
+  resolved: { bg: "#DCFCE7", tc: "#166534", dot: "#22C55E" },
   "in-progress": { bg: "#DBEAFE", tc: "#1D4ED8", dot: "#3B82F6" },
-  new:         { bg: "#DBEAFE", tc: "#1D4ED8", dot: "#3B82F6" },
+  new: { bg: "#DBEAFE", tc: "#1D4ED8", dot: "#3B82F6" },
 };
 
 /* ─── Tiny helpers ──────────────────────────────────────── */
@@ -706,19 +707,227 @@ function VehiclePermits() {
    Keeping as informational for now with a note.
 ═══════════════════════════════════════════════════════════ */
 function Permissions() {
+  const [permissions, setPermissions] = useState<AdminGeneralPermission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [actionId, setActionId] = useState<number | null>(null);
+  const [typeFilter, setTypeFilter] = useState<"All" | "Bandhara" | "Medical" | "Other">("All");
+  const [statusFilter, setStatusFilter] = useState<"" | "pending" | "approved" | "rejected">("");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await api.getGeneralPermissions();
+      setPermissions(data);
+    } catch (e: unknown) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function handleStatusUpdate(dbId: number, newStatus: "approved" | "rejected") {
+    setActionId(dbId);
+    try {
+      await api.updateGeneralPermissionStatus(dbId, newStatus);
+      setPermissions(prev =>
+        prev.map(p => (p.db_id === dbId ? { ...p, status: newStatus } : p))
+      );
+    } catch (e: unknown) {
+      alert((e as Error).message);
+    } finally {
+      setActionId(null);
+    }
+  }
+
+  // Filter permissions based on type, status, and search query
+  const filtered = permissions.filter(p => {
+    const matchesType = typeFilter === "All" || p.type.toLowerCase() === typeFilter.toLowerCase();
+    const matchesStatus = !statusFilter || p.status.toLowerCase() === statusFilter.toLowerCase();
+    const matchesSearch =
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.purpose.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesType && matchesStatus && matchesSearch;
+  });
+
+  const pendingCount = permissions.filter(p => p.status.toLowerCase() === "pending").length;
+  const approvedCount = permissions.filter(p => p.status.toLowerCase() === "approved").length;
+  const rejectedCount = permissions.filter(p => p.status.toLowerCase() === "rejected").length;
+
   return (
     <div>
-      <Head title="Permission Management"
-        sub="Bandhara, Medical Camp & Other permissions — managed via Vehicle Permits section." />
-      <div className="bg-white rounded-2xl p-10 flex flex-col items-center justify-center gap-3"
-        style={{ border: `1px solid ${C.border}` }}>
-        <ClipboardList size={36} color={C.border} />
-        <p className="text-sm font-semibold" style={{ color: C.muted }}>
-          Permission types (Bandhara, Medical Camps, etc.) are managed through the Vehicle Permits section.
-        </p>
-        <p className="text-xs text-center max-w-sm" style={{ color: C.muted }}>
-          Switch to "Vehicle Permits" in the sidebar to approve or deny permission requests.
-        </p>
+      <Head
+        title="Permission Management"
+        sub="Approve or reject Bandhara, Medical Camp, and Other permissions"
+        right={
+          <button
+            onClick={load}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white transition-colors"
+            style={{ backgroundColor: C.darkBlue }}
+          >
+            <RefreshCw size={13} /> Refresh
+          </button>
+        }
+      />
+
+      {error && <ErrorBanner msg={error} onRetry={load} />}
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        {[
+          { label: "Total Applications", value: permissions.length, color: C.darkBlue },
+          { label: "Approved", value: approvedCount, color: C.green },
+          { label: "Pending", value: pendingCount, color: "#D97706" },
+          { label: "Rejected", value: rejectedCount, color: C.red },
+        ].map(s => (
+          <div
+            key={s.label}
+            className="bg-white rounded-2xl p-4 text-center"
+            style={{ border: `1.5px solid ${C.border}`, borderTop: `3px solid ${s.color}` }}
+          >
+            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: C.muted }}>
+              {s.label}
+            </p>
+            <p className="text-3xl font-extrabold" style={{ color: s.color }}>
+              {s.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Filter and Search Bar */}
+      <div className="flex flex-wrap gap-3 mb-4 items-center">
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          ph="Search by code, applicant name or purpose…"
+        />
+
+        {/* Type Filter */}
+        <div className="flex rounded-xl overflow-hidden border bg-white" style={{ borderColor: C.border }}>
+          {(["All", "Bandhara", "Medical", "Other"] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setTypeFilter(t)}
+              className="px-3 py-1.5 text-xs font-bold transition-colors animate-all"
+              style={{
+                backgroundColor: typeFilter === t ? C.darkBlue : "transparent",
+                color: typeFilter === t ? C.white : C.text,
+              }}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+
+        {/* Status Filter */}
+        <div className="flex rounded-xl overflow-hidden border bg-white" style={{ borderColor: C.border }}>
+          {[
+            { label: "All Status", val: "" },
+            { label: "Pending", val: "pending" },
+            { label: "Approved", val: "approved" },
+            { label: "Rejected", val: "rejected" },
+          ].map(f => (
+            <button
+              key={f.label}
+              onClick={() => setStatusFilter(f.val as any)}
+              className="px-3 py-1.5 text-xs font-bold transition-colors animate-all"
+              style={{
+                backgroundColor: statusFilter === f.val ? C.darkBlue : "transparent",
+                color: statusFilter === f.val ? C.white : C.text,
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Table */}
+      <div className="bg-white rounded-2xl overflow-hidden shadow-sm border" style={{ borderColor: C.border }}>
+        {loading ? (
+          <LoadingSpinner />
+        ) : filtered.length === 0 ? (
+          <div className="p-12 text-center text-xs" style={{ color: C.muted }}>
+            No permission requests found matching criteria.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b" style={{ backgroundColor: "#f9fafb", borderColor: C.border }}>
+                  <th className="p-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Code</th>
+                  <th className="p-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Applicant</th>
+                  <th className="p-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Type / Subtype</th>
+                  <th className="p-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Date</th>
+                  <th className="p-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Purpose / Details</th>
+                  <th className="p-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Status</th>
+                  <th className="p-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y" style={{ divideColor: C.border }}>
+                {filtered.map(p => (
+                  <tr key={p.db_id} className="hover:bg-gray-50 transition-colors">
+                    <td className="p-4 whitespace-nowrap text-xs font-extrabold text-gray-900 uppercase">
+                      #{p.id}
+                    </td>
+                    <td className="p-4 text-xs font-bold text-gray-800">
+                      {p.name}
+                    </td>
+                    <td className="p-4 whitespace-nowrap text-xs font-medium text-gray-600">
+                      <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold mr-1.5 text-[10px]">
+                        {p.type}
+                      </span>
+                      <span>{p.subtype}</span>
+                    </td>
+                    <td className="p-4 whitespace-nowrap text-xs font-medium text-gray-600">
+                      {p.date}
+                    </td>
+                    <td className="p-4 text-xs text-gray-500 max-w-[240px] truncate" title={p.purpose}>
+                      {p.purpose}
+                    </td>
+                    <td className="p-4 whitespace-nowrap">
+                      <Chip status={p.status} />
+                    </td>
+                    <td className="p-4 whitespace-nowrap text-right text-xs">
+                      {p.status.toLowerCase() === "pending" ? (
+                        <div className="flex justify-end gap-1.5">
+                          <button
+                            disabled={actionId !== null}
+                            onClick={() => handleStatusUpdate(p.db_id, "approved")}
+                            className="p-1.5 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors border border-green-200"
+                            title="Approve"
+                          >
+                            <Check size={14} />
+                          </button>
+                          <button
+                            disabled={actionId !== null}
+                            onClick={() => handleStatusUpdate(p.db_id, "rejected")}
+                            className="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors border border-red-200"
+                            title="Reject"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] font-semibold text-gray-400 capitalize">
+                          Processed
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -989,7 +1198,7 @@ function LiveStatus() {
             <img src={activeCam.img} alt={activeCam.label} className="w-full h-full object-cover opacity-85" />
             <div className="absolute inset-0 pointer-events-none">
               {[["top-2 left-2", "border-t-2 border-l-2"], ["top-2 right-2", "border-t-2 border-r-2"],
-                ["bottom-2 left-2", "border-b-2 border-l-2"], ["bottom-2 right-2", "border-b-2 border-r-2"]].map(([pos, brd], i) => (
+              ["bottom-2 left-2", "border-b-2 border-l-2"], ["bottom-2 right-2", "border-b-2 border-r-2"]].map(([pos, brd], i) => (
                 <div key={i} className={`absolute ${pos} w-5 h-5 ${brd}`} style={{ borderColor: "rgba(247,148,29,0.8)" }} />
               ))}
               <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded" style={{ backgroundColor: "rgba(220,38,38,0.88)" }}>
@@ -1278,9 +1487,9 @@ function Announcements() {
   }
 
   const SEV_CFG = {
-    info:     { color: C.darkBlue, label: "ℹ️  Info",     desc: "General information" },
-    warning:  { color: C.orange,   label: "⚠️  Warning",  desc: "Important notice" },
-    critical: { color: C.red,      label: "🚨 Critical",  desc: "Urgent / emergency" },
+    info: { color: C.darkBlue, label: "ℹ️  Info", desc: "General information" },
+    warning: { color: C.orange, label: "⚠️  Warning", desc: "Important notice" },
+    critical: { color: C.red, label: "🚨 Critical", desc: "Urgent / emergency" },
   };
 
   return (
@@ -1528,7 +1737,7 @@ export function AdminPage() {
         vehicle: s.pending_permits,
         donations: s.total_donations,
       });
-    }).catch(() => {});
+    }).catch(() => { });
   }, [navigate]);
 
   function logout() {
