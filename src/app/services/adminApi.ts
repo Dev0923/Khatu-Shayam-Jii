@@ -444,68 +444,61 @@ export async function getParkingSnapshots(lotId: number, limit = 50): Promise<Pa
 }
 
 // ── Gallery System ────────────────────────────────────────
+// ── Gallery ──────────────────────────────────────────────
 
 export interface GalleryItem {
   id: number;
   url: string;
   title: string;
   description: string | null;
-  type: string;
+  type: string; // "photo" | "video"
+  category?: string | null;
+  photographer?: string | null;
   created_at: string;
 }
 
 export async function getGalleryItems(): Promise<GalleryItem[]> {
-  return apiFetch<GalleryItem[]>("/api/gallery", {}, false);
+  const res = await fetch(`${BASE_URL}/api/gallery`, {
+    headers: { Authorization: `Bearer ${getToken()}` },
+  });
+  if (!res.ok) throw new Error("Failed to fetch gallery items");
+  return res.json();
 }
 
 export async function uploadGalleryItem(formData: FormData): Promise<GalleryItem> {
-  const token = getToken();
-  const headers: Record<string, string> = {};
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  const response = await fetch(`${BASE_URL}/api/gallery`, {
+  const res = await fetch(`${BASE_URL}/api/gallery`, {
     method: "POST",
-    headers,
+    headers: { Authorization: `Bearer ${getToken()}` },
     body: formData,
   });
-  if (!response.ok) {
-    let detail = `HTTP ${response.status}`;
-    try {
-      const err = await response.json();
-      detail = err.detail ?? detail;
-    } catch { /* ignore */ }
-    throw new Error(detail);
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.detail || "Failed to upload gallery item");
   }
-  return response.json();
+  return res.json();
 }
 
 export async function updateGalleryItem(id: number, formData: FormData): Promise<GalleryItem> {
-  const token = getToken();
-  const headers: Record<string, string> = {};
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  const response = await fetch(`${BASE_URL}/api/gallery/${id}`, {
+  const res = await fetch(`${BASE_URL}/api/gallery/${id}`, {
     method: "PUT",
-    headers,
+    headers: { Authorization: `Bearer ${getToken()}` },
     body: formData,
   });
-  if (!response.ok) {
-    let detail = `HTTP ${response.status}`;
-    try {
-      const err = await response.json();
-      detail = err.detail ?? detail;
-    } catch { /* ignore */ }
-    throw new Error(detail);
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.detail || "Failed to update gallery item");
   }
-  return response.json();
+  return res.json();
 }
 
 export async function deleteGalleryItem(id: number): Promise<void> {
-  return apiFetch<void>(`/api/gallery/${id}`, {
+  const res = await fetch(`${BASE_URL}/api/gallery/${id}`, {
     method: "DELETE",
+    headers: { Authorization: `Bearer ${getToken()}` },
   });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.detail || "Failed to delete gallery item");
+  }
 }
-
 
