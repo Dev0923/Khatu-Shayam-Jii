@@ -1,5 +1,6 @@
 import { createBrowserRouter, Outlet } from "react-router";
 import { Footer } from "./components/Footer";
+import { Header } from "./components/Header";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { ServicePage } from "./pages/ServicePage";
@@ -26,14 +27,20 @@ import { AboutKhatuPage } from "./pages/AboutKhatuPage";
 import { LostFoundPage } from "./pages/LostFoundPage";
 import { ReportLostItemPage } from "./pages/ReportLostItemPage";
 import { MedicalCampPermissionPage } from "./pages/MedicalCampPermissionPage";
+import { AccommodationBookingPage } from "./pages/AccommodationBookingPage";
+import { OtherPermissionsPage } from "./pages/OtherPermissionsPage";
+
+import { AlertListener } from "./components/AlertListener";
 
 function RootLayout() {
   return (
     <div className="flex flex-col min-h-screen">
+      <Header />
       <div className="flex-1">
         <Outlet />
       </div>
       <Footer />
+      <AlertListener />
     </div>
   );
 }
@@ -68,6 +75,8 @@ export const router = createBrowserRouter([
       { path: "services/about-khatu", Component: AboutKhatuPage },
       { path: "services/lost-and-found", Component: LostFoundPage },
       { path: "services/lost-and-found/report", Component: ReportLostItemPage },
+      { path: "services/accommodation-booking", Component: AccommodationBookingPage },
+      { path: "services/other-permissions", Component: OtherPermissionsPage },
       { path: "services/:slug", Component: ServicePage },
       { path: "*", Component: HomePage },
     ],

@@ -323,6 +323,7 @@ export async function deleteAnnouncement(id: number): Promise<void> {
   return apiFetch<void>(`/api/admin/announcements/${id}`, { method: "DELETE" });
 }
 
+<<<<<<< HEAD
 // ── Gallery ──────────────────────────────────────────────
 
 export interface GalleryItem {
@@ -377,4 +378,31 @@ export async function deleteGalleryItem(id: number): Promise<void> {
     const data = await res.json().catch(() => ({}));
     throw new Error(data.detail || "Failed to delete gallery item");
   }
+=======
+// ── General Permissions ───────────────────────────────────
+
+export interface AdminGeneralPermission {
+  id: string; // permission_code
+  db_id: number;
+  name: string;
+  type: string;
+  subtype: string;
+  date: string;
+  purpose: string;
+  status: string;
+}
+
+export async function getGeneralPermissions(): Promise<AdminGeneralPermission[]> {
+  return apiFetch<AdminGeneralPermission[]>("/api/admin/general-permissions");
+}
+
+export async function updateGeneralPermissionStatus(
+  db_id: number,
+  status: string
+): Promise<void> {
+  return apiFetch<void>(`/api/admin/general-permissions/${db_id}/status`, {
+    method: "POST",
+    body: JSON.stringify({ status }),
+  });
+>>>>>>> 3f4d545a68f31d7f73b662bacf8f830fca2e65b8
 }

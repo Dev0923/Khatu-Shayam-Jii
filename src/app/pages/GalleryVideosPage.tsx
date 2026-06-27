@@ -77,9 +77,7 @@ export function GalleryVideosPage() {
       {/* Back bar */}
       <div className="w-full px-6 py-4 flex items-center gap-2" style={{ backgroundColor: C.darkBlue }}>
         <img src={logoImg} alt="Logo" className="w-7 h-7 rounded-full object-cover border-2" style={{ borderColor: C.orange }} />
-        <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-white text-sm font-semibold hover:opacity-80 ml-2">
-          <ArrowLeft size={15} /> Back to Home
-        </button>
+
         <button onClick={() => navigate("/gallery")} className="flex items-center gap-1.5 text-sm font-semibold hover:opacity-80 ml-4"
           style={{ color: "rgba(255,255,255,0.60)" }}>
           Photos
