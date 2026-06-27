@@ -20,53 +20,27 @@ def _bool_env(var: str, default: bool = False) -> bool:
         return False
     return default
 
+
+def _get_camera_config(camera_id: str, label: str, location: str) -> CameraConfig:
+    source = os.getenv(f"CAMERA_{camera_id}_SOURCE")
+    if source is not None:
+        source = source.strip()
+    return CameraConfig(
+        id=camera_id,
+        label=label,
+        location=location,
+        rtsp_url=os.getenv(f"CAMERA_{camera_id}_URL", ""),
+        fallback_video_path=os.getenv(f"CAMERA_{camera_id}_FALLBACK", "") or None,
+        use_simulator=_bool_env(f"CAMERA_{camera_id}_SIMULATOR", default=False),
+        source=source,
+    )
+
+
 DEFAULT_CAMERAS: List[CameraConfig] = [
-    CameraConfig(
-        id="C1",
-        label="Main Entrance (Singhdwar)",
-        location="Gate 1",
-        rtsp_url=os.getenv("CAMERA_C1_URL", "rtsp://localhost:8554/live1"),
-        fallback_video_path=os.getenv("CAMERA_C1_FALLBACK", "") or None,
-        use_simulator=_bool_env("CAMERA_C1_SIMULATOR", default=False),
-    ),
-    CameraConfig(
-        id="C2",
-        label="Garbhagriha Queue",
-        location="Inner",
-        rtsp_url=os.getenv("CAMERA_C2_URL", "rtsp://localhost:8554/live2"),
-        fallback_video_path=os.getenv("CAMERA_C2_FALLBACK", "") or None,
-        use_simulator=_bool_env("CAMERA_C2_SIMULATOR", default=False),
-    ),
-    CameraConfig(
-        id="C3",
-        label="Parikrama Path",
-        location="Outer",
-        rtsp_url=os.getenv("CAMERA_C3_URL", "rtsp://localhost:8554/live3"),
-        fallback_video_path=os.getenv("CAMERA_C3_FALLBACK", "") or None,
-        use_simulator=_bool_env("CAMERA_C3_SIMULATOR", default=False),
-    ),
-    CameraConfig(
-        id="C4",
-        label="Parking Area — Sector 4",
-        location="Parking",
-        rtsp_url=os.getenv("CAMERA_C4_URL", "rtsp://localhost:8554/live4"),
-        fallback_video_path=os.getenv("CAMERA_C4_FALLBACK", "") or None,
-        use_simulator=_bool_env("CAMERA_C4_SIMULATOR", default=False),
-    ),
-    CameraConfig(
-        id="C5",
-        label="Prasad Hall (Bhandara)",
-        location="Hall",
-        rtsp_url=os.getenv("CAMERA_C5_URL", "rtsp://localhost:8554/live5"),
-        fallback_video_path=os.getenv("CAMERA_C5_FALLBACK", "") or None,
-        use_simulator=_bool_env("CAMERA_C5_SIMULATOR", default=False),
-    ),
-    CameraConfig(
-        id="C6",
-        label="Temple Garden",
-        location="Garden",
-        rtsp_url=os.getenv("CAMERA_C6_URL", "rtsp://localhost:8554/live6"),
-        fallback_video_path=os.getenv("CAMERA_C6_FALLBACK", "") or None,
-        use_simulator=_bool_env("CAMERA_C6_SIMULATOR", default=False),
-    ),
+    _get_camera_config("C1", "Main Entrance (Singhdwar)", "Gate 1"),
+    _get_camera_config("C2", "Garbhagriha Queue", "Inner"),
+    _get_camera_config("C3", "Parikrama Path", "Outer"),
+    _get_camera_config("C4", "Parking Area — Sector 4", "Parking"),
+    _get_camera_config("C5", "Prasad Hall (Bhandara)", "Hall"),
+    _get_camera_config("C6", "Temple Garden", "Garden"),
 ]

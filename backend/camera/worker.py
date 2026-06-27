@@ -12,6 +12,22 @@ class CameraWorker:
         self.rtsp_url = config.rtsp_url
         self.fallback_path = config.fallback_video_path
         
+        # Determine active source (support legacy variables if source not set)
+        raw_source = config.source
+        if raw_source is not None:
+            raw_source = raw_source.strip()
+        
+        if not raw_source:
+            if config.use_simulator:
+                raw_source = "simulator"
+            elif config.rtsp_url:
+                raw_source = config.rtsp_url
+            else:
+                raw_source = ""
+                
+        self.source = raw_source
+        self.source_type = self._determine_source_type(self.source)
+        
         self.status = "connecting"
         self.latest_frame: Optional[np.ndarray] = None
         self.frame_count = 0
@@ -20,6 +36,29 @@ class CameraWorker:
         self._running = False
         self._thread: Optional[threading.Thread] = None
         self._lock = threading.Lock()
+        
+    def _determine_source_type(self, source: str) -> str:
+        if not source:
+            return "not_configured"
+        
+        source_lower = source.lower()
+        if source_lower == "simulator":
+            return "simulator"
+            
+        try:
+            int(source)
+            return "webcam"
+        except ValueError:
+            pass
+            
+        if source_lower.startswith("rtsp://"):
+            return "rtsp"
+            
+        import os
+        if os.path.isfile(source):
+            return "video"
+            
+        return "invalid"
         
     def start(self):
         with self._lock:
@@ -91,125 +130,166 @@ class CameraWorker:
         return frame
         
     def _run(self):
-        retry_delay = 5.0
-        max_retry_delay = 30.0
-        current_delay = retry_delay
-        reconnect_attempts = 0
+        try:
+            # ── Startup log ────────────────────────────────────────────────────
+            pretty_type = {
+                "simulator": "Simulator",
+                "webcam": "Webcam",
+                "rtsp": "RTSP Stream",
+                "video": "Video File",
+                "invalid": "Invalid Source",
+                "not_configured": "Not Configured"
+            }.get(self.source_type, "Unknown")
 
-        # ── Startup log ────────────────────────────────────────────────────
-        mode = "SIMULATOR" if self.config.use_simulator else "RTSP"
-        print(f"[CameraWorker {self.id}] ── Initializing ──────────────────────────")
-        print(f"[CameraWorker {self.id}]   Camera  : {self.config.label}")
-        print(f"[CameraWorker {self.id}]   Location: {self.config.location}")
-        print(f"[CameraWorker {self.id}]   Mode    : {mode}")
-        if not self.config.use_simulator:
-            print(f"[CameraWorker {self.id}]   Source  : {self.rtsp_url}")
-        if self.config.fallback_video_path:
-            print(f"[CameraWorker {self.id}]   Fallback: {self.config.fallback_video_path}")
-        print(f"[CameraWorker {self.id}] ─────────────────────────────────────────")
+            print(f"[CameraWorker {self.id}] ── Initializing ──────────────────────────")
+            print(f"[CameraWorker {self.id}]   Camera  : {self.config.label}")
+            print(f"[CameraWorker {self.id}]   Location: {self.config.location}")
+            print(f"[CameraWorker {self.id}]   Source  : {self.source} (Resolved Type: {pretty_type})")
+            if self.config.fallback_video_path:
+                print(f"[CameraWorker {self.id}]   Fallback: {self.config.fallback_video_path}")
+            print(f"[CameraWorker {self.id}] ─────────────────────────────────────────")
 
-        # ── Path A: Simulator explicitly enabled in config ─────────────────
-        # Set CAMERA_CX_SIMULATOR=true in your .env to use synthetic frames.
-        if self.config.use_simulator:
-            with self._lock:
-                self.status = "online"
-            self._run_simulator()
-            return
+            # ── Path A: Simulator explicitly enabled ─────────────────────────
+            if self.source_type == "simulator":
+                with self._lock:
+                    self.status = "online"
+                self._run_simulator()
+                return
 
-        # ── Path B: Always attempt real RTSP / video source ────────────────
-        while True:
-            with self._lock:
-                if not self._running:
-                    break
+            # ── Path B: No source configured ──────────────────────────────────
+            if self.source_type == "not_configured":
+                print(f"[CameraWorker {self.id}] No camera source configured. "
+                      f"Set CAMERA_{self.id}_SOURCE in .env to activate this camera.")
+                with self._lock:
+                    self.status = "not_configured"
+                # Dormant loop: sleep until worker is stopped.
+                while True:
+                    with self._lock:
+                        if not self._running:
+                            break
+                    time.sleep(5)
+                return
 
-            with self._lock:
-                self.status = "connecting"
-
-            if reconnect_attempts == 0:
-                print(f"[CameraWorker {self.id}] Attempting RTSP connection: {self.rtsp_url}")
-            else:
-                print(f"[CameraWorker {self.id}] Reconnect attempt #{reconnect_attempts}: {self.rtsp_url}")
-            cap = cv2.VideoCapture(self.rtsp_url)
-
-            # If RTSP fails and a fallback file path is configured, try that
-            if not cap.isOpened():
-                print(f"[CameraWorker {self.id}] RTSP connection FAILED: {self.rtsp_url}")
-                if self.fallback_path:
-                    print(f"[CameraWorker {self.id}] Trying fallback video file: {self.fallback_path}")
-                    cap = cv2.VideoCapture(self.fallback_path)
-
-            # If both RTSP and fallback file failed, enter error state and retry
-            if not cap.isOpened():
-                reconnect_attempts += 1
+            # ── Path C: Invalid source configured ─────────────────────────────
+            if self.source_type == "invalid":
+                print(f"[CameraWorker {self.id}] Invalid source path/type configured: '{self.source}'")
                 with self._lock:
                     self.status = "error"
-                print(f"[CameraWorker {self.id}] All sources unavailable. "
-                      f"Next retry in {current_delay:.0f}s (attempt #{reconnect_attempts}).")
-                stop_event = threading.Event()
-                stop_event.wait(timeout=current_delay)
-                current_delay = min(current_delay * 1.5, max_retry_delay)
-                continue
+                # Dormant loop: sleep until worker is stopped.
+                while True:
+                    with self._lock:
+                        if not self._running:
+                            break
+                    time.sleep(5)
+                return
 
-            # ── Stream opened — report capabilities ────────────────────────
-            reconnect_attempts = 0  # reset on successful connect
+            # ── Path D: Webcam, RTSP, or Video source ─────────────────────────
+            retry_delay = 5.0
+            max_retry_delay = 30.0
             current_delay = retry_delay
-            width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            native_fps = cap.get(cv2.CAP_PROP_FPS)
-            print(f"[CameraWorker {self.id}] ✓ Stream opened successfully.")
-            print(f"[CameraWorker {self.id}]   Resolution : {width}x{height}")
-            print(f"[CameraWorker {self.id}]   Native FPS : {native_fps:.1f}")
-            with self._lock:
-                self.status = "online"
+            reconnect_attempts = 0
 
-            last_frame_time = time.time()
-            total_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+            cap_source = int(self.source) if self.source_type == "webcam" else self.source
 
             while True:
                 with self._lock:
                     if not self._running:
                         break
 
-                ret, frame = cap.read()
+                with self._lock:
+                    self.status = "connecting"
 
-                # Loop local video file when it reaches the end
-                if not ret and total_frames > 0:
-                    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                if reconnect_attempts == 0:
+                    print(f"[CameraWorker {self.id}] Attempting connection to source: {self.source}")
+                else:
+                    print(f"[CameraWorker {self.id}] Reconnect attempt #{reconnect_attempts}: {self.source}")
+                
+                cap = cv2.VideoCapture(cap_source)
+
+                # If connection fails and fallback video path is configured, try that
+                if not cap.isOpened():
+                    print(f"[CameraWorker {self.id}] Connection FAILED: {self.source}")
+                    if self.fallback_path:
+                        print(f"[CameraWorker {self.id}] Trying fallback video file: {self.fallback_path}")
+                        cap = cv2.VideoCapture(self.fallback_path)
+
+                # If both primary and fallback failed, enter error state and retry
+                if not cap.isOpened():
+                    reconnect_attempts += 1
+                    with self._lock:
+                        self.status = "error"
+                    print(f"[CameraWorker {self.id}] All sources unavailable. "
+                          f"Next retry in {current_delay:.0f}s (attempt #{reconnect_attempts}).")
+                    stop_event = threading.Event()
+                    stop_event.wait(timeout=current_delay)
+                    current_delay = min(current_delay * 1.5, max_retry_delay)
+                    continue
+
+                # ── Stream opened — report capabilities ────────────────────────
+                reconnect_attempts = 0  # reset on successful connect
+                current_delay = retry_delay
+                width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                native_fps = cap.get(cv2.CAP_PROP_FPS)
+                print(f"[CameraWorker {self.id}] ✓ Stream opened successfully.")
+                print(f"[CameraWorker {self.id}]   Resolution : {width}x{height}")
+                print(f"[CameraWorker {self.id}]   Native FPS : {native_fps:.1f}")
+                with self._lock:
+                    self.status = "online"
+
+                last_frame_time = time.time()
+                total_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+
+                while True:
+                    with self._lock:
+                        if not self._running:
+                            break
+
                     ret, frame = cap.read()
 
-                if not ret:
-                    print(f"[CameraWorker {self.id}] ✗ Lost stream — frame read failed. Will reconnect.")
+                    # Loop local video file when it reaches the end
+                    if not ret and total_frames > 0:
+                        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                        ret, frame = cap.read()
+
+                    if not ret:
+                        print(f"[CameraWorker {self.id}] ✗ Lost stream — frame read failed. Will reconnect.")
+                        with self._lock:
+                            self.status = "offline"
+                        reconnect_attempts += 1
+                        break
+
+                    now = time.time()
+                    elapsed = now - last_frame_time
+                    current_fps = 1.0 / elapsed if elapsed > 0 else 0.0
+                    last_frame_time = now
+
                     with self._lock:
-                        self.status = "offline"
-                    reconnect_attempts += 1
-                    break
+                        self.latest_frame = frame
+                        self.frame_count += 1
+                        self.fps = 0.9 * self.fps + 0.1 * current_fps if self.frame_count > 1 else current_fps
+                        self.last_update = now
+                        measured_fps = self.fps
 
-                now = time.time()
-                elapsed = now - last_frame_time
-                current_fps = 1.0 / elapsed if elapsed > 0 else 0.0
-                last_frame_time = now
+                    # Log measured FPS briefly after first 30 frames to confirm stream health
+                    if self.frame_count == 30:
+                        print(f"[CameraWorker {self.id}]   Measured FPS (30-frame avg): {measured_fps:.1f}")
 
-                with self._lock:
-                    self.latest_frame = frame
-                    self.frame_count += 1
-                    self.fps = 0.9 * self.fps + 0.1 * current_fps if self.frame_count > 1 else current_fps
-                    self.last_update = now
-                    measured_fps = self.fps
+                    # Throttle CPU loop rate for file sources
+                    native_fps = cap.get(cv2.CAP_PROP_FPS)
+                    if native_fps > 0 and total_frames > 0:
+                        # File-based: pace at native FPS
+                        time.sleep(max(0.001, (1.0 / native_fps) - elapsed))
+                    else:
+                        # Live RTSP/Webcam: minimal sleep to avoid tight spin
+                        time.sleep(0.001)
 
-                # Log measured FPS briefly after first 30 frames to confirm stream health
-                if self.frame_count == 30:
-                    print(f"[CameraWorker {self.id}]   Measured FPS (30-frame avg): {measured_fps:.1f}")
+                cap.release()
 
-                # Throttle CPU loop rate for file sources
-                native_fps = cap.get(cv2.CAP_PROP_FPS)
-                if native_fps > 0 and total_frames > 0:
-                    # File-based: pace at native FPS
-                    time.sleep(max(0.001, (1.0 / native_fps) - elapsed))
-                else:
-                    # Live RTSP: minimal sleep to avoid tight spin
-                    time.sleep(0.001)
-
-            cap.release()
+        except Exception as e:
+            print(f"[CameraWorker {self.id}] Unexpected worker crash in loop: {e}")
+            with self._lock:
+                self.status = "error"
 
     def _run_simulator(self):
         """Synthetic frame generator loop. Runs until worker is stopped."""

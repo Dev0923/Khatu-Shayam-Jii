@@ -11,6 +11,7 @@ class CameraConfig(BaseModel):
     # Set this explicitly via env var (CAMERA_C1_SIMULATOR=true) during development.
     # Default is False — always attempt RTSP in production.
     use_simulator: bool = False
+    source: Optional[str] = None
 
 class CameraState(BaseModel):
     id: str

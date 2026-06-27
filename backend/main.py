@@ -18,6 +18,11 @@ from routes.general_permissions import router as general_permissions_router
 from routes.accommodation import router as accommodation_router
 from routes.cameras import router as cameras_router
 from camera.manager import CameraManager
+from ai.service import AIService
+from routes.inference import router as inference_router
+from routes.video_analysis import router as video_analysis_router
+from fastapi.staticfiles import StaticFiles
+import os
 
 
 @asynccontextmanager
@@ -29,7 +34,13 @@ async def lifespan(app: FastAPI):
     # Initialize camera worker threads
     CameraManager().initialize()
     
+    # Initialize AI density estimation service (loads LWCC Bay model once)
+    AIService().initialize()
+    
     yield
+    
+    # Shutdown AI sampling thread before stopping cameras
+    AIService().shutdown()
     
     # Shutdown camera worker threads
     CameraManager().shutdown()
@@ -66,6 +77,16 @@ app.include_router(lost_found_router)
 app.include_router(general_permissions_router)
 app.include_router(accommodation_router)
 app.include_router(cameras_router)
+app.include_router(inference_router)
+app.include_router(video_analysis_router)
+
+# Mount video analysis directory to serve processed static files
+os.makedirs(os.path.join("backend", "uploads", "video_analysis"), exist_ok=True)
+app.mount(
+    "/api/v1/video-analysis/static",
+    StaticFiles(directory=os.path.join("backend", "uploads", "video_analysis")),
+    name="video_analysis_static"
+)
 
 @app.get("/health")
 def health() -> dict[str, str]:

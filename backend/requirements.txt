@@ -16,3 +16,5 @@ fakeredis==2.27.0
 python-jose[cryptography]==3.4.0
 python-dotenv==1.1.0
 opencv-python-headless
+lwcc
+numpy

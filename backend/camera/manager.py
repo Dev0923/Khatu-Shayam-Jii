@@ -22,7 +22,10 @@ class CameraManager:
         """Initialize and start all camera workers from config."""
         camera_configs = configs if configs is not None else DEFAULT_CAMERAS
         for config in camera_configs:
-            self.add_camera(config)
+            try:
+                self.add_camera(config)
+            except Exception as e:
+                print(f"[CameraManager] FAILED to initialize camera {config.id}: {e}")
 
     def add_camera(self, config: CameraConfig):
         """Add and start a new camera worker."""
