@@ -12,26 +12,40 @@ const C = {
   border: "#EADCC9",
 };
 
+import shyamKundImg from "./images/shyam-kund.jpeg";
+import gourishankarImg from "./images/gourishankar-temple.jpeg";
+import shyamBagichiImg from "./images/shyam-baghichi.jpeg";
+import khatuFortImg from "./images/khatu-fort.jpeg";
+import jeenMataImg from "./images/jeenmata-temple.jpeg";
+import harshnathImg from "./images/harshnath-temple.jpeg";
+import ranilaFortImg from "./images/hill-fort.jpeg";
+import sikarCityImg from "./images/sikar-city.jpeg";
+import devgarhImg from "./images/devgarh.jpeg";
+import nawalgarhImg from "./images/nawalgarh.jpeg";
+import raniSatiImg from "./images/rani-sati.jpeg";
+import salasarImg from "./images/salasar.jpeg";
+
 interface Place {
   name: string;
   category: "Temple" | "Garden" | "Fort" | "Heritage Town";
   distance: number;
   desc: string;
+  image: string; // paste your image URL here
 }
 
 const PLACES: Place[] = [
-  { name: "Shyam Kund", category: "Temple", distance: 0, desc: "sacred pond, ritual dip before darshan" },
-  { name: "Gourishankar Temple", category: "Temple", distance: 0, desc: "ancient Shiva-Parvati temple" },
-  { name: "Shyam Bagichi", category: "Garden", distance: 0, desc: "peaceful garden near temple" },
-  { name: "Khatu Fort", category: "Fort", distance: 0, desc: "historic fort in town" },
-  { name: "Jeen Mata Temple", category: "Temple", distance: 28, desc: "hilltop Durga shrine, 300+ steps" },
-  { name: "Harshnath Temple", category: "Temple", distance: 35, desc: "10th-c. Shiva temple, Aravalli views" },
-  { name: "Ranila Hill Fort", category: "Fort", distance: 20, desc: "rocky hilltop fort, valley views" },
-  { name: "Sikar city", category: "Heritage Town", distance: 35, desc: "frescoed havelis, bazaars" },
-  { name: "Devgarh Fort", category: "Fort", distance: 50, desc: "18th-c. fort, Rajputana-Mughal style" },
-  { name: "Nawalgarh", category: "Heritage Town", distance: 60, desc: "Shekhawati painted havelis" },
-  { name: "Rani Sati Dadi Temple", category: "Temple", distance: 70, desc: "marble temple, trishul worship" },
-  { name: "Salasar Balaji Temple", category: "Temple", distance: 90, desc: "major Hanuman shrine" },
+  { name: "Shyam Kund", category: "Temple", distance: 0, desc: "sacred pond, ritual dip before darshan", image: shyamKundImg },
+  { name: "Gourishankar Temple", category: "Temple", distance: 0, desc: "ancient Shiva-Parvati temple", image: gourishankarImg },
+  { name: "Shyam Bagichi", category: "Garden", distance: 0, desc: "peaceful garden near temple", image: shyamBagichiImg },
+  { name: "Khatu Fort", category: "Fort", distance: 0, desc: "historic fort in town", image: khatuFortImg },
+  { name: "Jeen Mata Temple", category: "Temple", distance: 28, desc: "hilltop Durga shrine, 300+ steps", image: jeenMataImg },
+  { name: "Harshnath Temple", category: "Temple", distance: 35, desc: "10th-c. Shiva temple, Aravalli views", image: harshnathImg },
+  { name: "Ranila Hill Fort", category: "Fort", distance: 20, desc: "rocky hilltop fort, valley views", image: ranilaFortImg },
+  { name: "Sikar city", category: "Heritage Town", distance: 35, desc: "frescoed havelis, bazaars", image: sikarCityImg },
+  { name: "Devgarh Fort", category: "Fort", distance: 50, desc: "18th-c. fort, Rajputana-Mughal style", image: devgarhImg },
+  { name: "Nawalgarh", category: "Heritage Town", distance: 60, desc: "Shekhawati painted havelis", image: nawalgarhImg },
+  { name: "Rani Sati Dadi Temple", category: "Temple", distance: 70, desc: "marble temple, trishul worship", image: raniSatiImg },
+  { name: "Salasar Balaji Temple", category: "Temple", distance: 90, desc: "major Hanuman shrine", image: salasarImg },
 ];
 
 const CATEGORIES = ["All", "Temple", "Garden", "Fort", "Heritage Town"];
@@ -115,14 +129,14 @@ export function PlacesToVisitPage() {
 
       {/* ── Main Layout ───────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-10 flex-1 grid grid-cols-1 lg:grid-cols-4 gap-8">
-        
+
         {/* Left Side: Filter Options & Card Grid (Main Content) */}
         <main className="lg:col-span-3 flex flex-col gap-6">
-          
+
           {/* Filters Panel */}
           <div className="bg-white rounded-2xl p-5 md:p-6 shadow-sm border" style={{ borderColor: C.border }}>
             <div className="flex flex-col gap-5">
-              
+
               {/* Category Filter */}
               <div>
                 <span className="text-[11px] font-extrabold uppercase tracking-wider block mb-3" style={{ color: C.muted }}>
@@ -208,6 +222,17 @@ export function PlacesToVisitPage() {
                     className="bg-white rounded-2xl p-5 flex flex-col border transition-all hover:-translate-y-1 hover:shadow-md group"
                     style={{ borderColor: C.border }}
                   >
+                    <div
+                    className="w-full h-36 rounded-xl mb-3 overflow-hidden flex items-center justify-center"
+                    style={{ backgroundColor: C.cream, border: `1px solid ${C.border}` }}
+                    >
+                      {place.image ?
+                      (
+                      <img src={place.image} alt={place.name} className="w-full h-full object-cover" />
+                    ) : (
+                    <span className="text-3xl opacity-40">{CATEGORY_EMOJIS[place.category]}</span>
+                    )}
+                    </div>
                     {/* Header */}
                     <div className="flex justify-between items-start gap-2 mb-3">
                       <div>
@@ -244,7 +269,7 @@ export function PlacesToVisitPage() {
                       >
                         <Map size={12} /> Get Directions <ExternalLink size={10} />
                       </a>
-                      
+
                       <button
                         onClick={() => addToTrip(place)}
                         disabled={isInTrip}
@@ -336,7 +361,7 @@ export function PlacesToVisitPage() {
                     <span className="text-xs font-bold uppercase tracking-wider" style={{ color: C.muted }}>Total Sights:</span>
                     <span className="text-xs font-extrabold" style={{ color: C.maroon }}>{trip.length}</span>
                   </div>
-                  
+
                   <div className="flex justify-between items-center pt-2 border-t border-dashed" style={{ borderColor: C.border }}>
                     <div className="flex flex-col">
                       <span className="text-xs font-bold uppercase tracking-wider" style={{ color: C.muted }}>Running Distance:</span>
