@@ -16,12 +16,14 @@ from routes.admin import router as admin_router
 from routes.lost_found import router as lost_found_router
 from routes.general_permissions import router as general_permissions_router
 from routes.accommodation import router as accommodation_router
+from routes.parking import router as parking_router
 from routes.cameras import router as cameras_router
 from camera.manager import CameraManager
 from ai.service import AIService
 from routes.inference import router as inference_router
 from routes.video_analysis import router as video_analysis_router
 from routes.gallery import router as gallery_router
+from routes.gate import router as gate_router
 from fastapi.staticfiles import StaticFiles
 import os
 
@@ -77,10 +79,12 @@ app.include_router(admin_router)
 app.include_router(lost_found_router)
 app.include_router(general_permissions_router)
 app.include_router(accommodation_router)
+
 app.include_router(cameras_router)
 app.include_router(inference_router)
 app.include_router(video_analysis_router)
 app.include_router(gallery_router)
+app.include_router(gate_router)
 
 # Mount general uploads directory (main branch)
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
