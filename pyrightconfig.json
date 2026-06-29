@@ -1,3 +1,5 @@
 {
-  "extraPaths": ["./backend"]
+  "extraPaths": [
+    "./backend"
+  ]
 }

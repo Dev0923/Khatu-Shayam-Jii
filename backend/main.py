@@ -1,7 +1,9 @@
 from contextlib import asynccontextmanager
+import os
 
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from database import init_db
 from routes.bookings import router as bookings_router
@@ -23,9 +25,8 @@ from ai.service import AIService
 from routes.inference import router as inference_router
 from routes.video_analysis import router as video_analysis_router
 from routes.gallery import router as gallery_router
+from routes.chatbot import router as chatbot_router
 from routes.gate import router as gate_router
-from fastapi.staticfiles import StaticFiles
-import os
 
 
 @asynccontextmanager
@@ -79,11 +80,13 @@ app.include_router(admin_router)
 app.include_router(lost_found_router)
 app.include_router(general_permissions_router)
 app.include_router(accommodation_router)
+app.include_router(parking_router)
 
 app.include_router(cameras_router)
 app.include_router(inference_router)
 app.include_router(video_analysis_router)
 app.include_router(gallery_router)
+app.include_router(chatbot_router)
 app.include_router(gate_router)
 app.include_router(parking_router)  # includes /api/parking/ws WebSocket + zonal endpoints
 
@@ -94,10 +97,11 @@ os.makedirs(_UPLOADS_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=_UPLOADS_DIR), name="uploads")
 
 # Mount video analysis directory to serve processed static files (our branch)
-os.makedirs(os.path.join("backend", "uploads", "video_analysis"), exist_ok=True)
+_VIDEO_ANALYSIS_DIR = os.path.join(_UPLOADS_DIR, "video_analysis")
+os.makedirs(_VIDEO_ANALYSIS_DIR, exist_ok=True)
 app.mount(
     "/api/v1/video-analysis/static",
-    StaticFiles(directory=os.path.join("backend", "uploads", "video_analysis")),
+    StaticFiles(directory=_VIDEO_ANALYSIS_DIR),
     name="video_analysis_static"
 )
 
@@ -105,7 +109,6 @@ app.mount(
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
-from fastapi import WebSocket
 @app.websocket("/wstest")
 async def wstest(ws: WebSocket):
     await ws.accept()
