@@ -24,6 +24,7 @@ import premimumAnnadaanSeva from "../../imports/anna daan.jpeg";
 import trafficCommandCenter from "../../imports/traffic command center.jpeg";
 import accomodation from "../../imports/accomodation.jpeg";
 import crowdStatus from "../../imports/crowd status.jpeg";
+import liveParkingStatus from "../../imports/parking status.jpeg";
 
 
 
@@ -561,7 +562,7 @@ export function HomePage() {
                 slug: "parking",
                 title: t('services.parkingTitle'),
                 cta: t('services.btnCheck'),
-                img: "https://images.unsplash.com/photo-1506521788701-1e13a7ea3b1c?auto=format&fit=crop&w=600&q=80",
+                img : liveParkingStatus,
                 desc: t('services.parkingDesc'),
               },
               {
