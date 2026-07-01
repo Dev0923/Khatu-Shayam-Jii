@@ -9,7 +9,7 @@ import {
   Users2, Sun, Cloud, CloudRain, CloudSun, CloudLightning,
   CalendarDays, Car, ShieldAlert, Phone, Heart, Shield, MapPin, X
 } from "lucide-react";
-import templeImg from "../../imports/khatu-shyam-ji.jpg";
+import templeImg from "../../imports/khatu-shyam-ji.jpeg";
 import officerLogin from "../../imports/officer login.jpeg";
 import heroImg1 from "../../imports/hero section1.jpeg";
 import logoImg from "../../imports/image-21.png";
@@ -269,6 +269,7 @@ export function HomePage() {
             style={{
               color: "#ff9d1e",
               fontSize: "14px",
+              marginTop: "100px",
             }}
           >
             {t("hero.subtitle")}
