@@ -3985,8 +3985,8 @@ export function AdminPage() {
           <img src={logoImg} alt="logo" className="w-9 h-9 rounded-full object-cover border-2 flex-shrink-0"
             style={{ borderColor: C.orange }} />
           <div className="min-w-0">
-            <p className="text-[11px] font-extrabold text-white truncate leading-tight">Khatu Shyam Ji</p>
-            <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: C.orange }}>Admin Panel</p>
+            <p className="text-[14px] font-extrabold text-white truncate leading-tight">Khatu Shyam Ji</p>
+            <p className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: C.orange }}>Admin Panel</p>
           </div>
         </div>
 
@@ -4026,8 +4026,8 @@ export function AdminPage() {
               <MenuIcon size={18} />
             </button>
             <div>
-              <p className="text-xs sm:text-sm font-bold" style={{ color: C.text }}>{SECTION_TITLE[section]}</p>
-              <p className="text-[11px] hidden sm:block" style={{ color: C.muted }}>Khatu Shyam Ji Temple · Admin Portal</p>
+              <p className="text-base sm:text-lg font-bold" style={{ color: C.text }}>{SECTION_TITLE[section]}</p>
+              <p className="text-[11px] hidden sm:block italic" style={{ color: C.muted }}>Khatu Shyam Ji Temple · Admin Portal</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
